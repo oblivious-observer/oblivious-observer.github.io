@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-08-26 Wed 16:45 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>&lrm;</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Oblivious Observer" />
+<script src="/static/jquery.min.js"></script>
+<script src="/static/jquery.slim.min.js"></script>
+<script src="/static/popper.min.js"></script>
+<link rel="stylesheet" href="/static/bootstrap.min.css">
+<script src="/static/bootstrap.min.js"></script>
+<script src="/static/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="/static/roboto.txt">
+<style type="text/css">body{ padding: 5em 20%;}</style>
+<style type="text/css">code { color: #808080;}</style>
+<style type="text/css">pre { padding: 0pt;}</style>
+<style type="text/css">.navbar { margin:0 !important; padding: 0px !important; } </style>
+<link rel="stylesheet" href="/static/github.css">
+<script src="/static/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<link rel="stylesheet" type="text/css" href="/css/stylesheet.css" />
+
+        <style>
+        /* From: https://endlessparentheses.com/public/css/endless.css */
+        /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+        kbd
+        {
+          -moz-border-radius: 6px;
+          -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          -webkit-border-radius: 6px;
+          -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          background-color: #f7f7f7;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          color: #333;
+          display: inline-block;
+          font-family: 'Droid Sans Mono', monospace;
+          font-size: 80%;
+          font-weight: normal;
+          line-height: inherit;
+          margin: 0 .1em;
+          padding: .08em .4em;
+          text-shadow: 0 1px 0 #fff;
+          word-spacing: -4px;
+
+          box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+        }
+        </style>
+        <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+
+        <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+
+        <script type="text/javascript">
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape('%3Cscript src="https://code.jquery.com/jquery-1.10.0.min.js"%3E%3C/script%3E'));
+            }
+        </script>
+
+         <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+
+          <script>
+                 $(document).ready(function() {
+                     $('.tooltip').tooltipster({
+                         theme: 'tooltipster-punk',
+                         contentAsHTML: true,
+                         animation: 'grow',
+                         delay: [100,500],
+                         // trigger: 'click'
+                         trigger: 'custom',
+                         triggerOpen: {
+                             mouseenter: true
+                         },
+                         triggerClose: {
+                             originClick: true,
+                             scroll: true
+                         }
+         });
+                 });
+             </script>
+
+        <style>
+           abbr {color: red;}
+
+           .tooltip { border-bottom: 1px dotted #000;
+                      color:red;
+                      text-decoration: none;}
+        </style>
+</head>
+<body>
+<div id="preamble" class="status">
+<!-- [[file:~/blog/readme.org::*Navigation][Navigation:1]] -->
+<nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+
+  <a class="navbar-brand" href="/"> <img src="/static/observer.png" width="35" height="35" class="d-inline-block align-top" alt=""> </a>
+
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="nav navbar-nav ml-auto w-100 justify-content-left">
+      <li class="nav-item">
+        <a class="nav-link" href="/"> Oblivious Observer </a>
+      </li>
+    </ul>
+    <ul class="nav navbar-nav ml-auto w-100 justify-content-end">
+      <li class="nav-item">
+        <a class="nav-link" href="/about">about</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/config">config</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/">src</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/tags">tags</a>
+      </li>
+    </ul>
+  </div>
+  </div>
+</nav>
+<!-- Navigation:1 ends here -->
+</div>
+<div id="content">
+<div class="list-group">
+  
+  <a href="/introducing-oblivious" class="list-group-item list-group-item-action flex-column align-items-start">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1"> Introducing oblivious</h5>
+      <small>22.08.2020</small>
+    </div>
+    <p class="mb-1"> There is a new static site generator on the block.. also hello world..</p>
+    <small><span class="badge badge-secondary">bash</span>
+<span class="badge badge-secondary">Emacs</span>
+<span class="badge badge-secondary">oblivious</span>
+<span class="badge badge-secondary">org-mode</span>
+<span class="badge badge-secondary">org-publish</span></small>
+  </a>
+  
+</div>
+</div>
+</body>
+</html>
