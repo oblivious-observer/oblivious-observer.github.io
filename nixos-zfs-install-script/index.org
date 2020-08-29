@@ -1,0 +1,167 @@
+#+TITLE: NixOS on ZFS Install Script
+#+date: <2020-08-26 Wed>
+#+filetags: :Infrastructure_as_Documentation:Homelab:NixOS:ZFS:
+#+description: How to automatically install an unencrypted NixOS with root on ZFS
+#+options: html-postamble:nil
+#+include: ../../templates/default.org
+#+PROPERTY: header-args:bash :tangle ./install-nixos-on-ZFS.sh :comments link :tangle-mode (identity #o551)
+#+options: broken-links:t
+
+This is a rather short post and the start of what will hopefully become a nice
+little series of posts related to setting up and managing IT infrastructure.
+
+I just had to bulk install NixOS on a bunch of Intel NUCs, here is a little
+script to automate the installation process. Some bits and pieces are taken from
+other installation scripts, but it's been a while, so I don't know who to credit
+for them.
+
+Start with the usual =#!= and set the script up to exit on errors:
+#+BEGIN_SRC bash :comments none
+#!/usr/bin/env bash
+set -e
+#+END_SRC
+
+Next add a function for pretty printing, (I stole this part from somewhere else).
+#+BEGIN_SRC bash
+pprint () {
+    local cyan="\e[96m"
+    local default="\e[39m"
+    # ISO8601 timestamp + ms
+    local timestamp
+    timestamp=$(date +%FT%T.%3NZ)
+    echo -e "${cyan}${timestamp} $1${default}" 1>&2
+}
+#+END_SRC
+
+Instead of using a ~DISK~ variable and changing its value inside the script
+everytime it is run, simply let the user pick the device.
+#+BEGIN_SRC bash
+echo "These are the disks available:"
+ls -l /dev/disk/by-id/ | awk '{print $11, $10, $9}' | tr -d './' | column -t
+echo
+
+# Set DISK
+select ENTRY in $(ls /dev/disk/by-id/);
+do
+    echo $ENTRY
+    DISK="/dev/disk/by-id/$ENTRY"
+    echo "Installing system on $ENTRY."
+    break
+done
+#+END_SRC
+
+Next set up the SWAP Size:
+#+BEGIN_SRC bash
+echo -n "Enter Swap size (e.g. 10GiB, 5MiB)"
+echo
+read SWAP_SIZE
+if [[ $SWAP_SIZE =~ ^[0-9]*(GiB|MiB)$ ]]
+then
+  echo "Swap size set to $SWAP_SIZE"
+else
+  echo "Please enter correct size"
+  break
+fi
+#+END_SRC
+
+Ask for confirmation and wipe the disk:
+#+BEGIN_SRC bash
+read -p "> Do you want to wipe all data on $ENTRY ?" -n 1 -r
+echo # move to a new line
+if [[ "$REPLY" =~ ^[Yy]$ ]]
+then
+    # Clear disk
+    wipefs -af "$DISK"
+    sgdisk -Zo "$DISK"
+    partprobe $DISK
+else
+    exit 1
+fi
+#+END_SRC
+
+Initially I was using ~sgdisk~ in order to create all partitions. This usually
+seems to work, however I noticed, that on some hardware devices (NUC Canyons),
+the boot flag had to be set in order for them to actually boot up, so i switched
+to ~parted~ instead.
+#+BEGIN_SRC bash
+parted $DISK -- mklabel gpt
+
+pprint "Creating system partition"
+parted $DISK -- mkpart primary 512MiB -${SWAP_SIZE}
+ROOT="$DISK-part1"
+
+pprint "Creating swap partition"
+parted $DISK -- mkpart primary linux-swap -${SWAP_SIZE} 100%
+SWAP="$DISK-part2"
+
+pprint "Creating boot (EFI) partition"
+parted $DISK -- mkpart ESP fat32 1MiB 512MiB
+parted $DISK -- set 3 boot on
+BOOT="$DISK-part3"
+
+pprint "Running partprobe on $DISK"
+partprobe $DISK
+#+END_SRC
+
+Now that the partitions have been created, lets create filesystems and mount
+them. The ~sleep~ at the beginning seems to be necessary, otherwise there are
+problems with creating the swap partition.
+#+BEGIN_SRC bash
+sleep 2 # not sure why, but if we don't wait, the following swap does not work properly
+
+pprint "Enable SWAP on $SWAP"
+mkswap -L swap $SWAP
+swapon -L swap
+
+# ZFS partition
+pprint "Create zfs pool rpool"
+zpool create -f -O mountpoint=none -O acltype=posixacl -O xattr=sa -R /mnt rpool $ROOT
+
+pprint "Create zfs dataset rpool/root"
+zfs create -o mountpoint=none   rpool/root
+pprint "Create zfs dataset rpool/root/nixos"
+zfs create -o mountpoint=legacy rpool/root/nixos
+pprint "Create zfs dataset rpool/home"
+zfs create -o mountpoint=legacy rpool/home
+
+pprint "Mount datasets: rpool/root/nixos"
+mount -t zfs rpool/root/nixos /mnt
+
+pprint "Mount datasets: rpool/home"
+mkdir /mnt/home
+mount -t zfs rpool/home /mnt/home
+
+
+pprint "Mount boot partition"
+mkfs.fat -F 32 -n boot $BOOT
+mkdir /mnt/boot
+mount $BOOT /mnt/boot
+#+END_SRC
+
+Finally create a nixos configuration and set the system up to boot from ZFS:
+#+BEGIN_SRC bash
+pprint "Generate NixOS configuration"
+nixos-generate-config --root /mnt
+
+# Add LUKS and ZFS configuration
+HOSTID=$(head -c8 /etc/machine-id)
+
+HARDWARE_CONFIG=$(mktemp)
+cat << CONFIG > "$HARDWARE_CONFIG"
+networking.hostId = "$HOSTID";
+boot.supportedFilesystems = [ "zfs" ];
+boot.zfs.devNodes = "$ROOT";
+}
+CONFIG
+
+#pprint "Append configuration to hardware-configuration.nix"
+sed -i "\$ s/.}\$//;\$e cat $HARDWARE_CONFIG" /mnt/etc/nixos/configuration.nix
+
+pprint "You can now install nixos using the 'nixos-install' command."
+#+END_SRC
+
+#+BEGIN_EXPORT html
+That&rsquo;s basically it. You may be interested in the <a href="./index.org">org-mode source</a> of this
+document, from where you can tangle the script by opening it in Emacs and using
+<code>org-babel-tangle</code>.
+#+END_EXPORT

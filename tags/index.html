@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-08-26 Wed 16:45 -->
+<!-- 2020-08-29 Sat 14:31 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tags</title>
@@ -348,22 +348,42 @@
   var nodes = new vis.DataSet([
 
 {id: 1, label: 'Introducing \noblivious', url: '/introducing-oblivious'},
-{id: 2, shape: 'dot', label: 'oblivious', value:'1', url: '/tags/#oblivious'},
-{id: 3, shape: 'dot', label: 'org-publish', value:'1', url: '/tags/#org-publish'},
-{id: 4, shape: 'dot', label: 'Emacs', value:'1', url: '/tags/#Emacs'},
-{id: 5, shape: 'dot', label: 'org-mode', value:'1', url: '/tags/#org-mode'},
-{id: 6, shape: 'dot', label: 'bash', value:'1', url: '/tags/#bash'},
+{id: 2, label: 'NixOS encrypted VM \ninstallation', url: '/nixos-luks-vm'},
+{id: 3, label: 'NixOS on ZFS \nInstall Script', url: '/nixos-zfs-install-script'},
+{id: 4, shape: 'dot', label: 'oblivious', value:'1', url: '/tags/#oblivious'},
+{id: 5, shape: 'dot', label: 'Infrastructure as Documentation', value:'2', url: '/tags/#Infrastructure_as_Documentation'},
+{id: 6, shape: 'dot', label: 'org-publish', value:'1', url: '/tags/#org-publish'},
+{id: 7, shape: 'dot', label: 'Emacs', value:'1', url: '/tags/#Emacs'},
+{id: 8, shape: 'dot', label: 'dropbear', value:'1', url: '/tags/#dropbear'},
+{id: 9, shape: 'dot', label: 'LUKS', value:'1', url: '/tags/#LUKS'},
+{id: 10, shape: 'dot', label: 'org-mode', value:'1', url: '/tags/#org-mode'},
+{id: 11, shape: 'dot', label: 'Homelab', value:'2', url: '/tags/#Homelab'},
+{id: 12, shape: 'dot', label: 'libguestfs', value:'1', url: '/tags/#libguestfs'},
+{id: 13, shape: 'dot', label: 'bash', value:'1', url: '/tags/#bash'},
+{id: 14, shape: 'dot', label: 'NixOS', value:'2', url: '/tags/#NixOS'},
+{id: 15, shape: 'dot', label: 'ZFS', value:'2', url: '/tags/#ZFS'},
 
   ]);
 
   // create an array with edges
   var edges = new vis.DataSet([
 
-    {from: 2, to: 1},
-    {from: 3, to: 1},
     {from: 4, to: 1},
-    {from: 5, to: 1},
+    {from: 5, to: 2},
+    {from: 5, to: 3},
     {from: 6, to: 1},
+    {from: 7, to: 1},
+    {from: 8, to: 2},
+    {from: 9, to: 2},
+    {from: 10, to: 1},
+    {from: 11, to: 2},
+    {from: 11, to: 3},
+    {from: 12, to: 2},
+    {from: 13, to: 1},
+    {from: 14, to: 2},
+    {from: 14, to: 3},
+    {from: 15, to: 2},
+    {from: 15, to: 3},
 
   ]);
 
@@ -426,6 +446,26 @@ Doubleclick on the Nodes in order to jump to a tag or to open a blogpost.
 
 
 <div class=card border-dark mb-3 style=>
+  <a id=dropbear>
+  <div class=card-header>dropbear</div>
+  <div class=card-body text-dark>
+
+
+    <a href="/nixos-luks-vm" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS encrypted VM installation</h5>
+        <small>29.08.2020</small>
+      </div>
+      <p class="mb-1"> How to locally create a sparse and fully encrypted VM image running NixOS</p>
+    </a>
+
+
+  </div>
+</div>
+<hr>
+
+
+<div class=card border-dark mb-3 style=>
   <a id=Emacs>
   <div class=card-header>Emacs</div>
   <div class=card-body text-dark>
@@ -437,6 +477,133 @@ Doubleclick on the Nodes in order to jump to a tag or to open a blogpost.
         <small>22.08.2020</small>
       </div>
       <p class="mb-1"> There is a new static site generator on the block.. also hello world..</p>
+    </a>
+
+
+  </div>
+</div>
+<hr>
+
+
+<div class=card border-dark mb-3 style=>
+  <a id=Homelab>
+  <div class=card-header>Homelab</div>
+  <div class=card-body text-dark>
+
+
+    <a href="/nixos-luks-vm" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS encrypted VM installation</h5>
+        <small>29.08.2020</small>
+      </div>
+      <p class="mb-1"> How to locally create a sparse and fully encrypted VM image running NixOS</p>
+    </a>
+
+
+    <a href="/nixos-zfs-install-script" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS on ZFS Install Script</h5>
+        <small>26.08.2020</small>
+      </div>
+      <p class="mb-1"> How to automatically install an unencrypted NixOS with root on ZFS</p>
+    </a>
+
+
+  </div>
+</div>
+<hr>
+
+
+<div class=card border-dark mb-3 style=>
+  <a id=Infrastructure as Documentation>
+  <div class=card-header>Infrastructure as Documentation</div>
+  <div class=card-body text-dark>
+
+
+    <a href="/nixos-luks-vm" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS encrypted VM installation</h5>
+        <small>29.08.2020</small>
+      </div>
+      <p class="mb-1"> How to locally create a sparse and fully encrypted VM image running NixOS</p>
+    </a>
+
+
+    <a href="/nixos-zfs-install-script" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS on ZFS Install Script</h5>
+        <small>26.08.2020</small>
+      </div>
+      <p class="mb-1"> How to automatically install an unencrypted NixOS with root on ZFS</p>
+    </a>
+
+
+  </div>
+</div>
+<hr>
+
+
+<div class=card border-dark mb-3 style=>
+  <a id=libguestfs>
+  <div class=card-header>libguestfs</div>
+  <div class=card-body text-dark>
+
+
+    <a href="/nixos-luks-vm" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS encrypted VM installation</h5>
+        <small>29.08.2020</small>
+      </div>
+      <p class="mb-1"> How to locally create a sparse and fully encrypted VM image running NixOS</p>
+    </a>
+
+
+  </div>
+</div>
+<hr>
+
+
+<div class=card border-dark mb-3 style=>
+  <a id=LUKS>
+  <div class=card-header>LUKS</div>
+  <div class=card-body text-dark>
+
+
+    <a href="/nixos-luks-vm" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS encrypted VM installation</h5>
+        <small>29.08.2020</small>
+      </div>
+      <p class="mb-1"> How to locally create a sparse and fully encrypted VM image running NixOS</p>
+    </a>
+
+
+  </div>
+</div>
+<hr>
+
+
+<div class=card border-dark mb-3 style=>
+  <a id=NixOS>
+  <div class=card-header>NixOS</div>
+  <div class=card-body text-dark>
+
+
+    <a href="/nixos-luks-vm" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS encrypted VM installation</h5>
+        <small>29.08.2020</small>
+      </div>
+      <p class="mb-1"> How to locally create a sparse and fully encrypted VM image running NixOS</p>
+    </a>
+
+
+    <a href="/nixos-zfs-install-script" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS on ZFS Install Script</h5>
+        <small>26.08.2020</small>
+      </div>
+      <p class="mb-1"> How to automatically install an unencrypted NixOS with root on ZFS</p>
     </a>
 
 
@@ -497,6 +664,35 @@ Doubleclick on the Nodes in order to jump to a tag or to open a blogpost.
         <small>22.08.2020</small>
       </div>
       <p class="mb-1"> There is a new static site generator on the block.. also hello world..</p>
+    </a>
+
+
+  </div>
+</div>
+<hr>
+
+
+<div class=card border-dark mb-3 style=>
+  <a id=ZFS>
+  <div class=card-header>ZFS</div>
+  <div class=card-body text-dark>
+
+
+    <a href="/nixos-luks-vm" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS encrypted VM installation</h5>
+        <small>29.08.2020</small>
+      </div>
+      <p class="mb-1"> How to locally create a sparse and fully encrypted VM image running NixOS</p>
+    </a>
+
+
+    <a href="/nixos-zfs-install-script" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> NixOS on ZFS Install Script</h5>
+        <small>26.08.2020</small>
+      </div>
+      <p class="mb-1"> How to automatically install an unencrypted NixOS with root on ZFS</p>
     </a>
 
 

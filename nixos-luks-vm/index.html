@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-08-29 Sat 14:31 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NixOS encrypted VM installation</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Oblivious Observer" />
+<meta name="description" content="How to locally create a sparse and fully encrypted VM image running NixOS"
+ />
+<script src="/static/jquery.min.js"></script>
+<script src="/static/jquery.slim.min.js"></script>
+<script src="/static/popper.min.js"></script>
+<link rel="stylesheet" href="/static/bootstrap.min.css">
+<script src="/static/bootstrap.min.js"></script>
+<script src="/static/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="/static/roboto.txt">
+<style type="text/css">body{ padding: 5em 20%;}</style>
+<style type="text/css">code { color: #808080;}</style>
+<style type="text/css">pre { padding: 0pt;}</style>
+<style type="text/css">.navbar { margin:0 !important; padding: 0px !important; } </style>
+<link rel="stylesheet" href="/static/github.css">
+<script src="/static/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+        <style>
+        /* From: https://endlessparentheses.com/public/css/endless.css */
+        /* See also: https://meta.superuser.com/questions/4788/css-for-the-new-kbd-style */
+        kbd
+        {
+          -moz-border-radius: 6px;
+          -moz-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          -webkit-border-radius: 6px;
+          -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          background-color: #f7f7f7;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          box-shadow: 0 1px 0 rgba(0,0,0,0.2),0 0 0 2px #fff inset;
+          color: #333;
+          display: inline-block;
+          font-family: 'Droid Sans Mono', monospace;
+          font-size: 80%;
+          font-weight: normal;
+          line-height: inherit;
+          margin: 0 .1em;
+          padding: .08em .4em;
+          text-shadow: 0 1px 0 #fff;
+          word-spacing: -4px;
+
+          box-shadow: 2px 2px 2px #222; /* MA: An extra I've added. */
+        }
+        </style>
+        <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/tooltipster.bundle.min.css"/>
+
+        <link rel="stylesheet" type="text/css" href="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/css/plugins/tooltipster/sideTip/themes/tooltipster-sideTip-punk.min.css" />
+
+        <script type="text/javascript">
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape('%3Cscript src="https://code.jquery.com/jquery-1.10.0.min.js"%3E%3C/script%3E'));
+            }
+        </script>
+
+         <script type="text/javascript"            src="https://alhassy.github.io/org-special-block-extras/tooltipster/dist/js/tooltipster.bundle.min.js"></script>
+
+          <script>
+                 $(document).ready(function() {
+                     $('.tooltip').tooltipster({
+                         theme: 'tooltipster-punk',
+                         contentAsHTML: true,
+                         animation: 'grow',
+                         delay: [100,500],
+                         // trigger: 'click'
+                         trigger: 'custom',
+                         triggerOpen: {
+                             mouseenter: true
+                         },
+                         triggerClose: {
+                             originClick: true,
+                             scroll: true
+                         }
+         });
+                 });
+             </script>
+
+        <style>
+           abbr {color: red;}
+
+           .tooltip { border-bottom: 1px dotted #000;
+                      color:red;
+                      text-decoration: none;}
+        </style>
+</head>
+<body>
+<div id="preamble" class="status">
+<!-- [[file:~/blog/readme.org::*Navigation][Navigation:1]] -->
+<nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+
+  <a class="navbar-brand" href="/"> <img src="/static/observer.png" width="35" height="35" class="d-inline-block align-top" alt=""> </a>
+
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="nav navbar-nav ml-auto w-100 justify-content-left">
+      <li class="nav-item">
+        <a class="nav-link" href="/"> Oblivious Observer </a>
+      </li>
+    </ul>
+    <ul class="nav navbar-nav ml-auto w-100 justify-content-end">
+      <li class="nav-item">
+        <a class="nav-link" href="/about">about</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/config">config</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/">src</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/tags">tags</a>
+      </li>
+    </ul>
+  </div>
+  </div>
+</nav>
+<!-- Navigation:1 ends here -->
+</div>
+<div id="content">
+<h1 class="title">NixOS encrypted VM installation</h1>
+<p>
+In this post I&rsquo;ll describe how to set up a sparse VM image with full disk
+encryption and NixOS on ZFS, which can be uploaded to a VPS provider and
+unlocked on boot using ssh.
+</p>
+
+<p>
+First we need to create a virtual machine image file. Initially I tried using
+<code>qemu-img</code>, but somehow the image file was missing some information and the VM
+would not recognize a disk. Instead I went with the easy way and used
+<code>virt-manager</code> to create a new VM with the correct image size. <code>virt-manager</code>
+seems to create images allocated with the full size:
+</p>
+
+<div class="org-src-container">
+<pre><code class="bash">$ sudo ls -lh /var/lib/libvirt/images
+-rw------- 1 root root  161G Aug 24 08:59 nixosVM160GB.qcow2
+-rw------- 1 root root   41G Aug 24 00:22 nixosVM40GB.qcow2
+</code></pre>
+</div>
+
+<p>
+Uploading 200GB of mostly empty VM images can take quite a while, lets make them
+smaller using the wonderful <code>libguestfs-tools</code>.
+</p>
+
+<div class="org-src-container">
+<pre><code class="bash">$ nix-shell -p libguestfs-with-appliance --run "sudo virt-sparsify /var/lib/libvirt/images/nixosVM40GB.qcow2 \
+  /var/lib/libvirt/images/nixosVM40GB-sparse.qcow2"
+[   0.1] Create overlay file in /tmp to protect source disk
+[   0.1] Examine source disk
+[   1.8] Copy to destination and make sparse
+[  46.6] Sparsify operation completed with no errors.
+.virt-sparsify-wrapped: Before deleting the old disk, carefully check that
+the target disk boots and works correctly.
+$ nix-shell -p libguestfs-with-appliance --run "sudo virt-sparsify /var/lib/libvirt/images/nixosVM160GB.qcow2 \
+  /var/lib/libvirt/images/nixosVM160GB-sparse.qcow2"
+[   0.0] Create overlay file in /tmp to protect source disk
+[   0.1] Examine source disk
+[   1.6] Copy to destination and make sparse
+[ 172.0] Sparsify operation completed with no errors.
+.virt-sparsify-wrapped: Before deleting the old disk, carefully check that
+the target disk boots and works correctly.
+</code></pre>
+</div>
+
+<p>
+Now the files are considerably smaller:
+</p>
+<div class="org-src-container">
+<pre><code class="bash">$ sudo ls -lh /var/lib/libvirt/images
+-rw------- 1 root root  161G Aug 24 08:59 nixosVM160GB.qcow2
+-rw-r--r-- 1 root root  195K Aug 28 16:13 nixosVM160GB-sparse.qcow2
+-rw------- 1 root root   41G Aug 24 00:22 nixosVM40GB.qcow2
+-rw-r--r-- 1 root root  193K Aug 28 16:11 nixosVM40GB-sparse.qcow2
+</code></pre>
+</div>
+
+<p>
+Next install the VMs. In order to do so, create a new VM in virt-manager using
+the sparse image, add a CDROM type storage device with the NixOS install iso and
+set up the virtual machine to boot from this device.
+</p>
+
+<p>
+The following script will create a virtual machine with the following partition
+layout, (I&rsquo;m using ZFS inside lvm in this setup):
+</p>
+<pre class="example">
+sda
+├─sda1            GRUB
+├─sda2            BOOT
+└─sda3            LINUX (LUKS CONTAINER)
+  └─cryptroot     LUKS MAPPER
+    └─lvmvg-swap  SWAP
+    └─lvmvg-root  ZFS
+</pre>
+
+<details class="code-details"> <summary> <strong> <font face="Courier" size="3" color="green"> <span style="color:black;">Here is the script (click to unfold):</span> </font> </strong> </summary> <p>
+
+</p>
+<div class="org-src-container">
+<pre><code class="bash"><span class="linenr">  1: </span>#!/usr/bin/env bash
+<span class="linenr">  2: </span>set -e
+<span class="linenr">  3: </span>
+<span class="linenr">  4: </span>pprint () {
+<span class="linenr">  5: </span>    local cyan="\e[96m"
+<span class="linenr">  6: </span>    local default="\e[39m"
+<span class="linenr">  7: </span>    # ISO8601 timestamp + ms
+<span class="linenr">  8: </span>    local timestamp
+<span class="linenr">  9: </span>    timestamp=$(date +%FT%T.%3NZ)
+<span class="linenr"> 10: </span>    echo -e "${cyan}${timestamp} $1${default}" 1&gt;&amp;2
+<span class="linenr"> 11: </span>}
+<span class="linenr"> 12: </span>
+<span class="linenr"> 13: </span>echo "These are the disks available:"
+<span class="linenr"> 14: </span>ls -l /dev/disk/by-id/ | awk '{print $11, $10, $9}' | tr -d './' | column -t
+<span class="linenr"> 15: </span>echo
+<span class="linenr"> 16: </span>
+<span class="linenr"> 17: </span># Set DISK
+<span class="linenr"> 18: </span>select ENTRY in $(ls /dev/disk/by-id/);
+<span class="linenr"> 19: </span>do
+<span class="linenr"> 20: </span>    echo $ENTRY
+<span class="linenr"> 21: </span>    DISK="/dev/disk/by-id/$ENTRY"
+<span class="linenr"> 22: </span>    echo "Installing system on $ENTRY."
+<span class="linenr"> 23: </span>    break
+<span class="linenr"> 24: </span>done
+<span class="linenr"> 25: </span>
+<span class="linenr"> 26: </span>
+<span class="linenr"> 27: </span>echo -n "Enter Swap size (e.g. 10G, 5M)"
+<span class="linenr"> 28: </span>echo
+<span class="linenr"> 29: </span>read SWAP_SIZE
+<span class="linenr"> 30: </span>if [[ $SWAP_SIZE =~ ^[0-9]*(G|M)$ ]]
+<span class="linenr"> 31: </span>then
+<span class="linenr"> 32: </span>  echo "Swap size set to $SWAP_SIZE"
+<span class="linenr"> 33: </span>else
+<span class="linenr"> 34: </span>  echo "Please enter correct size"
+<span class="linenr"> 35: </span>  break
+<span class="linenr"> 36: </span>fi
+<span class="linenr"> 37: </span>
+<span class="linenr"> 38: </span>read -p "&gt; Do you want to wipe all data on $ENTRY ?" -n 1 -r
+<span class="linenr"> 39: </span>echo # move to a new line
+<span class="linenr"> 40: </span>if [[ "$REPLY" =~ ^[Yy]$ ]]
+<span class="linenr"> 41: </span>then
+<span class="linenr"> 42: </span>    # Clear disk
+<span class="linenr"> 43: </span>    wipefs -af "$DISK"
+<span class="linenr"> 44: </span>    sgdisk -Zo "$DISK"
+<span class="linenr"> 45: </span>fi
+<span class="linenr"> 46: </span>
+<span class="linenr"> 47: </span>pprint "Creating grub partition"
+<span class="linenr"> 48: </span>sgdisk -n 0:0:+1000K    -t 1:EF02 "$DISK"
+<span class="linenr"> 49: </span>GRUB="$DISK-part1"
+<span class="linenr"> 50: </span>
+<span class="linenr"> 51: </span>pprint "Creating boot partition"
+<span class="linenr"> 52: </span>sgdisk -n 0:0:+512M -t 0:EF00 "$DISK"
+<span class="linenr"> 53: </span>BOOT="$DISK-part2"
+<span class="linenr"> 54: </span>
+<span class="linenr"> 55: </span>pprint "Creating Linux partition"
+<span class="linenr"> 56: </span>sgdisk -n 0:0:0 -t 3:8300 "$DISK"
+<span class="linenr"> 57: </span>LINUX="$DISK-part3"
+<span class="linenr"> 58: </span>
+<span class="linenr"> 59: </span># Inform kernel
+<span class="linenr"> 60: </span>partprobe "$DISK"
+<span class="linenr"> 61: </span>sleep 1
+<span class="linenr"> 62: </span>
+<span class="linenr"> 63: </span>pprint "Format BOOT partition $BOOT"
+<span class="linenr"> 64: </span>mkfs.vfat "$BOOT"
+<span class="linenr"> 65: </span>
+<span class="linenr"> 66: </span>pprint "Creating LUKS container on $LINUX"
+<span class="linenr"> 67: </span>cryptsetup --type luks2 luksFormat "$LINUX"
+<span class="linenr"> 68: </span>
+<span class="linenr"> 69: </span>LUKS_DEVICE_NAME=cryptroot
+<span class="linenr"> 70: </span>cryptsetup luksOpen "$LINUX" "$LUKS_DEVICE_NAME"
+<span class="linenr"> 71: </span>
+<span class="linenr"> 72: </span>LUKS_DISK="/dev/mapper/$LUKS_DEVICE_NAME"
+<span class="linenr"> 73: </span>
+<span class="linenr"> 74: </span># Create LVM physical volume
+<span class="linenr"> 75: </span>pvcreate $LUKS_DISK
+<span class="linenr"> 76: </span>
+<span class="linenr"> 77: </span>LVM_VOLUME_GROUP=vg0
+<span class="linenr"> 78: </span>vgcreate "$LVM_VOLUME_GROUP" "$LUKS_DISK"
+<span class="linenr"> 79: </span>
+<span class="linenr"> 80: </span>lvcreate --name swap --size $SWAP_SIZE "$LVM_VOLUME_GROUP"
+<span class="linenr"> 81: </span>SWAP="/dev/$LVM_VOLUME_GROUP/swap"
+<span class="linenr"> 82: </span>
+<span class="linenr"> 83: </span>pprint "Enable SWAP on $SWAP"
+<span class="linenr"> 84: </span>mkswap $SWAP
+<span class="linenr"> 85: </span>swapon $SWAP
+<span class="linenr"> 86: </span>
+<span class="linenr"> 87: </span># ZFS partition
+<span class="linenr"> 88: </span>lvcreate --name root --extents 100%FREE "$LVM_VOLUME_GROUP"
+<span class="linenr"> 89: </span>ZFS="/dev/$LVM_VOLUME_GROUP/root"
+<span class="linenr"> 90: </span>
+<span class="linenr"> 91: </span>pprint "Create ZFS pool on $ZFS"
+<span class="linenr"> 92: </span># -f force
+<span class="linenr"> 93: </span># -m mountpoint
+<span class="linenr"> 94: </span>zpool create -f -m none -R /mnt rpool "$ZFS"
+<span class="linenr"> 95: </span>
+<span class="linenr"> 96: </span>pprint "Create ZFS datasets"
+<span class="linenr"> 97: </span>
+<span class="linenr"> 98: </span>zfs create -o mountpoint=legacy rpool/root
+<span class="linenr"> 99: </span>zfs create -o mountpoint=legacy rpool/root/nix
+<span class="linenr">100: </span>zfs create -o mountpoint=legacy rpool/home
+<span class="linenr">101: </span>
+<span class="linenr">102: </span>zfs set com.sun:auto-snapshot=true rpool/home
+<span class="linenr">103: </span>
+<span class="linenr">104: </span>zfs snapshot rpool/root@blank
+<span class="linenr">105: </span>
+<span class="linenr">106: </span>pprint "Mount ZFS datasets"
+<span class="linenr">107: </span>mount -t zfs rpool/root /mnt
+<span class="linenr">108: </span>
+<span class="linenr">109: </span>mkdir /mnt/nix
+<span class="linenr">110: </span>mount -t zfs rpool/root/nix /mnt/nix
+<span class="linenr">111: </span>
+<span class="linenr">112: </span>mkdir /mnt/home
+<span class="linenr">113: </span>mount -t zfs rpool/home /mnt/home
+<span class="linenr">114: </span>
+<span class="linenr">115: </span>mkdir /mnt/boot
+<span class="linenr">116: </span>mount "$BOOT" /mnt/boot
+<span class="linenr">117: </span>
+<span class="linenr">118: </span>pprint "Generate NixOS configuration"
+<span class="linenr">119: </span>nixos-generate-config --root /mnt
+<span class="linenr">120: </span>
+<span class="linenr">121: </span># Add LUKS and ZFS configuration
+<span class="linenr">122: </span>HOSTID=$(head -c8 /etc/machine-id)
+<span class="linenr">123: </span>LINUX_DISK_UUID=$(blkid --match-tag UUID --output value "$LINUX")
+<span class="linenr">124: </span>
+<span class="linenr">125: </span>HARDWARE_CONFIG=$(mktemp)
+<span class="linenr">126: </span>cat &lt;&lt;CONFIG &gt; "$HARDWARE_CONFIG"
+<span class="linenr">127: </span>  networking.hostId = "$HOSTID";
+<span class="linenr">128: </span>  boot.initrd.luks.devices."$LUKS_DEVICE_NAME".device = "/dev/disk/by-uuid/$LINUX_DISK_UUID";
+<span class="linenr">129: </span>  boot.zfs.devNodes = "$ZFS";
+<span class="linenr">130: </span>CONFIG
+<span class="linenr">131: </span>
+<span class="linenr">132: </span>pprint "Append configuration to hardware-configuration.nix"
+<span class="linenr">133: </span>sed -i "\$e cat $HARDWARE_CONFIG" /mnt/etc/nixos/hardware-configuration.nix
+</code></pre>
+</div>
+ </details>
+
+<p>
+After running the script, create the dropbear ssh keys:
+</p>
+<div class="org-src-container">
+<pre><code class="bash">$ nix-shell -p dropbear --command "dropbearkey -t ecdsa -f /tmp/initrd-ssh-key"
+</code></pre>
+</div>
+
+<p>
+Copy the key into <code>/</code> as well as <code>/mnt</code> (for some reason the installer seems to
+fail, when the keys aren&rsquo;t found in <code>/</code>):
+</p>
+<div class="org-src-container">
+<pre><code class="bash">$ sudo mkdir -p /var/dropbear /mnt/var/dropbear
+$ sudo cp /tmp/initrd-ssh-key /var/dropbear/
+$ sudo cp /tmp/initrd-ssh-key /mnt/var/dropbear/
+</code></pre>
+</div>
+
+<p>
+Add in the boot config:
+</p>
+<div class="org-src-container">
+<pre><code class="nix">  boot.loader.grub.device = "/dev/sda";
+
+  boot.initrd.network.enable = true;
+  boot.initrd.network.ssh = {
+    enable = true;
+    port = 2222;
+    authorizedKeys = [ "ssh-rsa ..." ];   &lt;-------- this is your list of ssh keys, which are allowed to log in
+    hostECDSAKey = /var/dropbear/initrd-ssh-key;
+  };
+  boot.initrd.network.postCommands = ''
+    echo "cryptsetup-askpass" &gt;&gt; /root/.profile
+  '';
+</code></pre>
+</div>
+
+<p>
+Finally the VM has to be able to connect to the network, so the initramdisk
+needs to have the correct kernel modules available. It is possible to find out
+which kernel modules are necessary for a specific provider by simply launching a
+VM and looking at <code>lsmod</code> or clicking through the VM configuration and looking
+for a section on virtualisation drivers.
+</p>
+
+<div class="org-src-container">
+<pre><code class="nix">  boot.initrd.availableKernelModules = [ "e1000e" "virtio_pci" "e1000" ];
+</code></pre>
+</div>
+
+<p>
+Finally install nixos using <code>nixos-install</code> and reboot.
+</p>
+
+<p>
+Using different entries in <code>~/.ssh/config</code> can make rebooting and decrypting the luks devices easier:
+</p>
+<div class="org-src-container">
+<pre><code class="conf">Host vm
+  Hostname 1.2.3.4
+  User user
+
+Host unlock.vm
+  Hostname 1.2.3.4
+  User root
+  Port 2222
+</code></pre>
+</div>
+
+<p>
+This way there won&rsquo;t be any key conflicts and you can conveniently unlock the VMs using:
+</p>
+<div class="org-src-container">
+<pre><code class="bash">$ ssh unlock.vm # alternatively use: ssh -p 2222 root@192.168.122.x
+The authenticity of host '[192.168.122.x]:2222 ([192.168.122.x]:2222)' can't be established.
+ECDSA key fingerprint is SHA256:...
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[192.168.122.x]:2222' (ECDSA) to the list of known hosts.
+Passphrase for /dev/disk/by-uuid/...:
+Waiting 10 seconds for LUKS to request a passphrase.......Connection to 192.168.122.x closed by remote host.
+Connection to 192.168.122.x closed.
+</code></pre>
+</div>
+
+<p>
+After installation these are the file sizes:
+</p>
+<div class="org-src-container">
+<pre><code class="bash">$ sudo ls -lh /var/lib/libvirt/images/
+-rw-r--r-- 1 root root  195K Aug 28 16:54 160GB-sparse-disk-template.qcow2
+-rw-r--r-- 1 root root  193K Jul 31 18:36 20GB-sparse-disk-template.qcow2
+-rw-r--r-- 1 root root  193K Aug 28 16:54 40GB-sparse-disk-template.qcow2
+-rw------- 1 root root  161G Aug 24 08:59 nixosVM160GB.qcow2
+-rw-r--r-- 1 root root  1.9G Aug 29 14:11 nixosVM160GB-sparse.qcow2
+-rw------- 1 root root   41G Aug 24 00:22 nixosVM40GB.qcow2
+-rw-r--r-- 1 root root  2.0G Aug 29 14:01 nixosVM40GB-sparse.qcow2
+</code></pre>
+</div>
+
+You may be interested in the <a href="./index.org">org-mode source</a> of this
+document, from where you can tangle the script by opening it in Emacs and using
+<code>org-babel-tangle</code>.
+</div>
+</body>
+</html>

@@ -6,10 +6,10 @@
 <!-- 2020-08-29 Sat 14:31 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Introducing oblivious</title>
+<title>NixOS on ZFS Install Script</title>
 <meta name="generator" content="Org mode" />
 <meta name="author" content="Oblivious Observer" />
-<meta name="description" content="There is a new static site generator on the block.. also hello world.."
+<meta name="description" content="How to automatically install an unencrypted NixOS with root on ZFS"
  />
 <script src="/static/jquery.min.js"></script>
 <script src="/static/jquery.slim.min.js"></script>
@@ -132,115 +132,191 @@
 <!-- Navigation:1 ends here -->
 </div>
 <div id="content">
-<h1 class="title">Introducing oblivious</h1>
+<h1 class="title">NixOS on ZFS Install Script</h1>
 <p>
-Over the last weekend and a half, I&rsquo;ve spent quite some time writing
-<code>oblivious</code>, which is essentially a little static site generator written in
-<code>bash</code> and <code>org-mode</code> and <code>emacs-lisp</code>.
+This is a rather short post and the start of what will hopefully become a nice
+little series of posts related to setting up and managing IT infrastructure.
 </p>
 
 <p>
-Previous to writing oblivious I looked at other blogging solutions, I actually
-already tried using <code>org-mode</code> combined with <code>ox-hugo</code> in the past. While
-<code>ox-hugo</code> definitely does it&rsquo;s job I ended up spending quite a big amount of
-time with
-</p>
-<ul class="org-ul">
-<li>theming the whole thing,</li>
-<li>being annoyed with the go templating language,</li>
-<li>using the wrong version of <code>hugo</code></li>
-<li>generally trying to figure out how to use <code>ox-hugo</code></li>
-<li>manually downloading Javascript and CSS files so I could serve them locally</li>
-</ul>
-
-<p>
-While both <code>hugo</code> as well as <code>ox-hugo</code> are really nice projects, using it I
-found myself thinking about how nice it would be to have a native way to
-create a static site directly from within Emacs.
+I just had to bulk install NixOS on a bunch of Intel NUCs, here is a little
+script to automate the installation process. Some bits and pieces are taken from
+other installation scripts, but it&rsquo;s been a while, so I don&rsquo;t know who to credit
+for them.
 </p>
 
 <p>
-There are actually quite a bunch of options when it comes to creating websites
-using Emacs and <code>org-mode</code>, I&rsquo;ve tried some of them out and finally settled with
-the built-in <code>org-publish</code>, which is what I&rsquo;m using now.
+Start with the usual <code>#!</code> and set the script up to exit on errors:
 </p>
+<div class="org-src-container">
+<pre><code class="bash">#!/usr/bin/env bash
+set -e
+</code></pre>
+</div>
 
 <p>
-<b>But you&rsquo;ve just said you&rsquo;ve written your own static site generator!</b>
+Next add a function for pretty printing, (I stole this part from somewhere else).
 </p>
+<div class="org-src-container">
+<pre><code class="bash">pprint () {
+    local cyan="\e[96m"
+    local default="\e[39m"
+    # ISO8601 timestamp + ms
+    local timestamp
+    timestamp=$(date +%FT%T.%3NZ)
+    echo -e "${cyan}${timestamp} $1${default}" 1&gt;&amp;2
+}
+</code></pre>
+</div>
 
 <p>
-Well yes, but actually no. I lied, kind of.. but maybe just bear with me for a
-while, it&rsquo;ll make sense eventually.
+Instead of using a <code>DISK</code> variable and changing its value inside the script
+everytime it is run, simply let the user pick the device.
 </p>
+<div class="org-src-container">
+<pre><code class="bash">echo "These are the disks available:"
+ls -l /dev/disk/by-id/ | awk '{print $11, $10, $9}' | tr -d './' | column -t
+echo
+
+# Set DISK
+select ENTRY in $(ls /dev/disk/by-id/);
+do
+    echo $ENTRY
+    DISK="/dev/disk/by-id/$ENTRY"
+    echo "Installing system on $ENTRY."
+    break
+done
+</code></pre>
+</div>
 
 <p>
-I haven&rsquo;t written a static site generator, that would have been a really bad
-idea, after all I&rsquo;m an utter illiterate when it comes to web development and up
-until this point I&rsquo;ve basically just cargo culted my way through all of the
-web-development parts of creating this website. I&rsquo;ve used <code>org-publish</code> in order
-to generate everything, because it&rsquo;s a nice little built-in and basically just
-works out of the box.
+Next set up the SWAP Size:
 </p>
+<div class="org-src-container">
+<pre><code class="bash">echo -n "Enter Swap size (e.g. 10GiB, 5MiB)"
+echo
+read SWAP_SIZE
+if [[ $SWAP_SIZE =~ ^[0-9]*(GiB|MiB)$ ]]
+then
+  echo "Swap size set to $SWAP_SIZE"
+else
+  echo "Please enter correct size"
+  break
+fi
+</code></pre>
+</div>
 
 <p>
-<b>So what is oblivious then?</b>
+Ask for confirmation and wipe the disk:
 </p>
+<div class="org-src-container">
+<pre><code class="bash">read -p "&gt; Do you want to wipe all data on $ENTRY ?" -n 1 -r
+echo # move to a new line
+if [[ "$REPLY" =~ ^[Yy]$ ]]
+then
+    # Clear disk
+    wipefs -af "$DISK"
+    sgdisk -Zo "$DISK"
+    partprobe $DISK
+else
+    exit 1
+fi
+</code></pre>
+</div>
 
 <p>
-Basically <code>oblivious</code> is a small little command line application you can use to
-[automatically] create a website.
+Initially I was using <code>sgdisk</code> in order to create all partitions. This usually
+seems to work, however I noticed, that on some hardware devices (NUC Canyons),
+the boot flag had to be set in order for them to actually boot up, so i switched
+to <code>parted</code> instead.
 </p>
+<div class="org-src-container">
+<pre><code class="bash">parted $DISK -- mklabel gpt
+
+pprint "Creating system partition"
+parted $DISK -- mkpart primary 512MiB -${SWAP_SIZE}
+ROOT="$DISK-part1"
+
+pprint "Creating swap partition"
+parted $DISK -- mkpart primary linux-swap -${SWAP_SIZE} 100%
+SWAP="$DISK-part2"
+
+pprint "Creating boot (EFI) partition"
+parted $DISK -- mkpart ESP fat32 1MiB 512MiB
+parted $DISK -- set 3 boot on
+BOOT="$DISK-part3"
+
+pprint "Running partprobe on $DISK"
+partprobe $DISK
+</code></pre>
+</div>
 
 <p>
-<code>Emacs</code> and <code>org-publish</code> still do the heavy lifting, when it comes to the
-actual export of your org-files. <code>oblivious</code> takes care of a few other quality
-of life things, such as:
+Now that the partitions have been created, lets create filesystems and mount
+them. The <code>sleep</code> at the beginning seems to be necessary, otherwise there are
+problems with creating the swap partition.
 </p>
-<ul class="org-ul">
-<li>injecting your <code>org-publish</code> configuration into your <code>Emacs</code> configuration
-(you can actually use whatever export backend you prefer with oblivious)</li>
-<li>housekeeping tasks: such as configuring the <code>.gitignore</code> file or setting up
-the <code>git</code> user</li>
-<li>fetching (even building) external resources, such as Javascript or CSS</li>
-<li>triggering emacs in batch mode in order to load or tangle the configuration of
-a website</li>
-</ul>
+<div class="org-src-container">
+<pre><code class="bash">sleep 2 # not sure why, but if we don't wait, the following swap does not work properly
+
+pprint "Enable SWAP on $SWAP"
+mkswap -L swap $SWAP
+swapon -L swap
+
+# ZFS partition
+pprint "Create zfs pool rpool"
+zpool create -f -O mountpoint=none -O acltype=posixacl -O xattr=sa -R /mnt rpool $ROOT
+
+pprint "Create zfs dataset rpool/root"
+zfs create -o mountpoint=none   rpool/root
+pprint "Create zfs dataset rpool/root/nixos"
+zfs create -o mountpoint=legacy rpool/root/nixos
+pprint "Create zfs dataset rpool/home"
+zfs create -o mountpoint=legacy rpool/home
+
+pprint "Mount datasets: rpool/root/nixos"
+mount -t zfs rpool/root/nixos /mnt
+
+pprint "Mount datasets: rpool/home"
+mkdir /mnt/home
+mount -t zfs rpool/home /mnt/home
+
+
+pprint "Mount boot partition"
+mkfs.fat -F 32 -n boot $BOOT
+mkdir /mnt/boot
+mount $BOOT /mnt/boot
+</code></pre>
+</div>
 
 <p>
-All of the configuration of a site resides in a single org file, which is then
-tangled and/or loaded into everything necessary to create a site.
+Finally create a nixos configuration and set the system up to boot from ZFS:
 </p>
+<div class="org-src-container">
+<pre><code class="bash">pprint "Generate NixOS configuration"
+nixos-generate-config --root /mnt
 
-<p>
-Inside of the configuration file you define settings such as the value for
-<code>#+author</code>, ways to automatically fetch resources you need and templates for
-parts of the site.
-</p>
+# Add LUKS and ZFS configuration
+HOSTID=$(head -c8 /etc/machine-id)
 
-<p>
-Whenever you change the configuration file, you run <code>oblivious sync</code> in order to
-generate all the templates etc and <code>oblivious fetch</code>, whenever you need to
-download resources. Using <code>oblivious build</code> you can then start a batch export,
-which creates your static site.
-</p>
+HARDWARE_CONFIG=$(mktemp)
+cat &lt;&lt; CONFIG &gt; "$HARDWARE_CONFIG"
+networking.hostId = "$HOSTID";
+boot.supportedFilesystems = [ "zfs" ];
+boot.zfs.devNodes = "$ROOT";
+}
+CONFIG
 
-<p>
-How exactly you set up your site is still pretty much up to you, but IHMO using
-<code>oblivious</code> basically provides you with a similiar interface to what you may
-know from using some of the more common static site generators, while at the
-same time being <code>org-mode</code>, <code>emacs-lisp</code> and <code>bash</code> under the hood.
-</p>
+#pprint "Append configuration to hardware-configuration.nix"
+sed -i "\$ s/.}\$//;\$e cat $HARDWARE_CONFIG" /mnt/etc/nixos/configuration.nix
 
-<p>
-If you&rsquo;re intrigued and want to look at the gory details, I suggest you head
-over to <a href="../config/">config</a> which is where I keep a detailed configuration of how this site
-is built.
-</p>
+pprint "You can now install nixos using the 'nixos-install' command."
+</code></pre>
+</div>
 
-<p>
-Oh and also hello world!
-</p>
+That&rsquo;s basically it. You may be interested in the <a href="./index.org">org-mode source</a> of this
+document, from where you can tangle the script by opening it in Emacs and using
+<code>org-babel-tangle</code>.
 </div>
 </body>
 </html>
