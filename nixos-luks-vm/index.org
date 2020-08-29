@@ -290,3 +290,5 @@ You may be interested in the <a href="./index.org">org-mode source</a> of this
 document, from where you can tangle the script by opening it in Emacs and using
 <code>org-babel-tangle</code>.
 #+END_EXPORT
+* Comments :ignore:
+#+include: ../../templates/comments.org

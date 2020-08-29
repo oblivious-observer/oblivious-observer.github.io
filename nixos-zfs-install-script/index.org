@@ -165,3 +165,5 @@ That&rsquo;s basically it. You may be interested in the <a href="./index.org">or
 document, from where you can tangle the script by opening it in Emacs and using
 <code>org-babel-tangle</code>.
 #+END_EXPORT
+* Comments :ignore:
+#+include: ../../templates/comments.org

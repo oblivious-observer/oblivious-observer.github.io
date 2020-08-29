@@ -78,3 +78,5 @@ over to [[../config/][config]] which is where I keep a detailed configuration of
 is built.
 
 Oh and also hello world!
+* Comments :ignore:
+#+include: ../../templates/comments.org
