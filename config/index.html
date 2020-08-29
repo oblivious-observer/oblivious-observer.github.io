@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-08-29 Sat 14:31 -->
+<!-- 2020-08-29 Sat 15:16 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>oblivious</title>
@@ -328,7 +328,7 @@
         <a class="nav-link" href="/config">config</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="/">src</a>
+        <a class="nav-link" href="https://github.com/observer/observer.github.io">src</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="/tags">tags</a>
@@ -660,7 +660,13 @@ configuration of our site local while still using it in our emacs configuration.
 </p>
 
 <div class="org-src-container">
-<pre><code class="emacs-lisp" id="orge1836cc">(use-package htmlize
+<pre><code class="emacs-lisp" id="orge1836cc">(use-package org
+  :ensure org-plus-contrib
+  :config
+  (require 'ox-extra)
+  (ox-extras-activate '(ignore-headlines)))
+
+(use-package htmlize
   :ensure t)
 
 (use-package ox-publish
@@ -1320,7 +1326,7 @@ Notes:
         &lt;a class="nav-link" href="/config"&gt;config&lt;/a&gt;
       &lt;/li&gt;
       &lt;li class="nav-item"&gt;
-        &lt;a class="nav-link" href="/"&gt;src&lt;/a&gt;
+        &lt;a class="nav-link" href="https://github.com/observer/observer.github.io"&gt;src&lt;/a&gt;
       &lt;/li&gt;
       &lt;li class="nav-item"&gt;
         &lt;a class="nav-link" href="/tags"&gt;tags&lt;/a&gt;
@@ -1683,9 +1689,9 @@ echo '#+END_EXPORT'
 </div>
 </div>
 </div>
-<div id="outline-container-orgcf5d7d7" class="outline-3">
-<h3 id="orgcf5d7d7">Comments</h3>
-<div class="outline-text-3" id="text-orgcf5d7d7">
+<div id="outline-container-orgd53b974" class="outline-3">
+<h3 id="orgd53b974">Comments</h3>
+<div class="outline-text-3" id="text-orgd53b974">
 <p>
 Comments can be set up using github issues. There is even an official github
 project called utterances, which takes care of everything. Everything works by
@@ -1705,7 +1711,7 @@ just reference it here:
 echo '#+BEGIN_EXPORT html'
 echo "
 &lt;script src="https://utteranc.es/client.js"
-        repo="[ENTER REPO HERE]"
+        repo="https://github.com/observer/observer.github.io"
         issue-term="pathname"
         theme="github-light"
         crossorigin="anonymous"
@@ -1844,19 +1850,14 @@ A version of this sites public key can be found on the <a href="../about/">about
 </div>
 </div>
 
-<div id="outline-container-orgd53b974" class="outline-2">
-<h2 id="orgd53b974">Comments&#xa0;&#xa0;&#xa0;<span class="tag"><span class="ignore">ignore</span></span></h2>
-<div class="outline-text-2" id="text-orgd53b974">
 
 <script src=https://utteranc.es/client.js
-        repo=[ENTER REPO HERE]
+        repo=https://github.com/observer/observer.github.io
         issue-term=pathname
         theme=github-light
         crossorigin=anonymous
         async>
 </script>
-</div>
-</div>
 </div>
 </body>
 </html>
