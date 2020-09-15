@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-08-29 Sat 15:34 -->
+<!-- 2020-09-15 Tue 18:01 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tags</title>
@@ -350,40 +350,46 @@
 {id: 1, label: 'Introducing \noblivious', url: '/introducing-oblivious'},
 {id: 2, label: 'NixOS encrypted VM \ninstallation', url: '/nixos-luks-vm'},
 {id: 3, label: 'NixOS on ZFS \nInstall Script', url: '/nixos-zfs-install-script'},
-{id: 4, shape: 'dot', label: 'oblivious', value:'1', url: '/tags/#oblivious'},
-{id: 5, shape: 'dot', label: 'Infrastructure as Documentation', value:'2', url: '/tags/#Infrastructure_as_Documentation'},
-{id: 6, shape: 'dot', label: 'org-publish', value:'1', url: '/tags/#org-publish'},
-{id: 7, shape: 'dot', label: 'Emacs', value:'1', url: '/tags/#Emacs'},
-{id: 8, shape: 'dot', label: 'dropbear', value:'1', url: '/tags/#dropbear'},
-{id: 9, shape: 'dot', label: 'LUKS', value:'1', url: '/tags/#LUKS'},
-{id: 10, shape: 'dot', label: 'org-mode', value:'1', url: '/tags/#org-mode'},
-{id: 11, shape: 'dot', label: 'Homelab', value:'2', url: '/tags/#Homelab'},
-{id: 12, shape: 'dot', label: 'libguestfs', value:'1', url: '/tags/#libguestfs'},
-{id: 13, shape: 'dot', label: 'bash', value:'1', url: '/tags/#bash'},
-{id: 14, shape: 'dot', label: 'NixOS', value:'2', url: '/tags/#NixOS'},
-{id: 15, shape: 'dot', label: 'ZFS', value:'2', url: '/tags/#ZFS'},
+{id: 4, label: 'Including snippets', url: '/orgmode-include-noweb-extensions'},
+{id: 5, shape: 'dot', label: 'oblivious', value:'1', url: '/tags/#oblivious'},
+{id: 6, shape: 'dot', label: 'noweb', value:'1', url: '/tags/#noweb'},
+{id: 7, shape: 'dot', label: 'Infrastructure as Documentation', value:'2', url: '/tags/#Infrastructure_as_Documentation'},
+{id: 8, shape: 'dot', label: 'org-publish', value:'1', url: '/tags/#org-publish'},
+{id: 9, shape: 'dot', label: 'Emacs', value:'2', url: '/tags/#Emacs'},
+{id: 10, shape: 'dot', label: 'dropbear', value:'1', url: '/tags/#dropbear'},
+{id: 11, shape: 'dot', label: 'LUKS', value:'1', url: '/tags/#LUKS'},
+{id: 12, shape: 'dot', label: 'org-mode', value:'1', url: '/tags/#org-mode'},
+{id: 13, shape: 'dot', label: 'orgmode', value:'1', url: '/tags/#orgmode'},
+{id: 14, shape: 'dot', label: 'Homelab', value:'2', url: '/tags/#Homelab'},
+{id: 15, shape: 'dot', label: 'libguestfs', value:'1', url: '/tags/#libguestfs'},
+{id: 16, shape: 'dot', label: 'bash', value:'1', url: '/tags/#bash'},
+{id: 17, shape: 'dot', label: 'NixOS', value:'2', url: '/tags/#NixOS'},
+{id: 18, shape: 'dot', label: 'ZFS', value:'2', url: '/tags/#ZFS'},
 
   ]);
 
   // create an array with edges
   var edges = new vis.DataSet([
 
-    {from: 4, to: 1},
-    {from: 5, to: 2},
-    {from: 5, to: 3},
-    {from: 6, to: 1},
-    {from: 7, to: 1},
-    {from: 8, to: 2},
-    {from: 9, to: 2},
-    {from: 10, to: 1},
+    {from: 5, to: 1},
+    {from: 6, to: 4},
+    {from: 7, to: 2},
+    {from: 7, to: 3},
+    {from: 8, to: 1},
+    {from: 9, to: 1},
+    {from: 9, to: 4},
+    {from: 10, to: 2},
     {from: 11, to: 2},
-    {from: 11, to: 3},
-    {from: 12, to: 2},
-    {from: 13, to: 1},
+    {from: 12, to: 1},
+    {from: 13, to: 4},
     {from: 14, to: 2},
     {from: 14, to: 3},
     {from: 15, to: 2},
-    {from: 15, to: 3},
+    {from: 16, to: 1},
+    {from: 17, to: 2},
+    {from: 17, to: 3},
+    {from: 18, to: 2},
+    {from: 18, to: 3},
 
   ]);
 
@@ -477,6 +483,15 @@ Doubleclick on the Nodes in order to jump to a tag or to open a blogpost.
         <small>22.08.2020</small>
       </div>
       <p class="mb-1"> There is a new static site generator on the block.. also hello world..</p>
+    </a>
+
+
+    <a href="/orgmode-include-noweb-extensions" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> Including snippets</h5>
+        <small>14.09.2020</small>
+      </div>
+      <p class="mb-1"> How to include noweb snippets from other files in orgmode</p>
     </a>
 
 
@@ -613,6 +628,26 @@ Doubleclick on the Nodes in order to jump to a tag or to open a blogpost.
 
 
 <div class=card border-dark mb-3 style=>
+  <a id=noweb>
+  <div class=card-header>noweb</div>
+  <div class=card-body text-dark>
+
+
+    <a href="/orgmode-include-noweb-extensions" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> Including snippets</h5>
+        <small>14.09.2020</small>
+      </div>
+      <p class="mb-1"> How to include noweb snippets from other files in orgmode</p>
+    </a>
+
+
+  </div>
+</div>
+<hr>
+
+
+<div class=card border-dark mb-3 style=>
   <a id=oblivious>
   <div class=card-header>oblivious</div>
   <div class=card-body text-dark>
@@ -644,6 +679,26 @@ Doubleclick on the Nodes in order to jump to a tag or to open a blogpost.
         <small>22.08.2020</small>
       </div>
       <p class="mb-1"> There is a new static site generator on the block.. also hello world..</p>
+    </a>
+
+
+  </div>
+</div>
+<hr>
+
+
+<div class=card border-dark mb-3 style=>
+  <a id=orgmode>
+  <div class=card-header>orgmode</div>
+  <div class=card-body text-dark>
+
+
+    <a href="/orgmode-include-noweb-extensions" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"> Including snippets</h5>
+        <small>14.09.2020</small>
+      </div>
+      <p class="mb-1"> How to include noweb snippets from other files in orgmode</p>
     </a>
 
 

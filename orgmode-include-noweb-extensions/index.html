@@ -6,9 +6,11 @@
 <!-- 2020-09-15 Tue 18:01 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>&lrm;</title>
+<title>Including snippets</title>
 <meta name="generator" content="Org mode" />
 <meta name="author" content="Oblivious Observer" />
+<meta name="description" content="How to include noweb snippets from other files in orgmode"
+ />
 <script src="/static/jquery.min.js"></script>
 <script src="/static/jquery.slim.min.js"></script>
 <script src="/static/popper.min.js"></script>
@@ -23,7 +25,6 @@
 <link rel="stylesheet" href="/static/github.css">
 <script src="/static/highlight.pack.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
-<link rel="stylesheet" type="text/css" href="/css/stylesheet.css" />
 
         <style>
         /* From: https://endlessparentheses.com/public/css/endless.css */
@@ -131,63 +132,76 @@
 <!-- Navigation:1 ends here -->
 </div>
 <div id="content">
-<div class="list-group">
-  
-  <a href="/orgmode-include-noweb-extensions" class="list-group-item list-group-item-action flex-column align-items-start">
-    <div class="d-flex w-100 justify-content-between">
-      <h5 class="mb-1"> Including snippets</h5>
-      <small>14.09.2020</small>
-    </div>
-    <p class="mb-1"> How to include noweb snippets from other files in orgmode</p>
-    <small><span class="badge badge-secondary">Emacs</span>
-<span class="badge badge-secondary">noweb</span>
-<span class="badge badge-secondary">orgmode</span></small>
-  </a>
-  
-  
-  <a href="/nixos-luks-vm" class="list-group-item list-group-item-action flex-column align-items-start">
-    <div class="d-flex w-100 justify-content-between">
-      <h5 class="mb-1"> NixOS encrypted VM installation</h5>
-      <small>29.08.2020</small>
-    </div>
-    <p class="mb-1"> How to locally create a sparse and fully encrypted VM image running NixOS</p>
-    <small><span class="badge badge-secondary">dropbear</span>
-<span class="badge badge-secondary">Homelab</span>
-<span class="badge badge-secondary">Infrastructure as Documentation</span>
-<span class="badge badge-secondary">libguestfs</span>
-<span class="badge badge-secondary">LUKS</span>
-<span class="badge badge-secondary">NixOS</span>
-<span class="badge badge-secondary">ZFS</span></small>
-  </a>
-  
-  
-  <a href="/nixos-zfs-install-script" class="list-group-item list-group-item-action flex-column align-items-start">
-    <div class="d-flex w-100 justify-content-between">
-      <h5 class="mb-1"> NixOS on ZFS Install Script</h5>
-      <small>26.08.2020</small>
-    </div>
-    <p class="mb-1"> How to automatically install an unencrypted NixOS with root on ZFS</p>
-    <small><span class="badge badge-secondary">Homelab</span>
-<span class="badge badge-secondary">Infrastructure as Documentation</span>
-<span class="badge badge-secondary">NixOS</span>
-<span class="badge badge-secondary">ZFS</span></small>
-  </a>
-  
-  
-  <a href="/introducing-oblivious" class="list-group-item list-group-item-action flex-column align-items-start">
-    <div class="d-flex w-100 justify-content-between">
-      <h5 class="mb-1"> Introducing oblivious</h5>
-      <small>22.08.2020</small>
-    </div>
-    <p class="mb-1"> There is a new static site generator on the block.. also hello world..</p>
-    <small><span class="badge badge-secondary">bash</span>
-<span class="badge badge-secondary">Emacs</span>
-<span class="badge badge-secondary">oblivious</span>
-<span class="badge badge-secondary">org-mode</span>
-<span class="badge badge-secondary">org-publish</span></small>
-  </a>
-  
+<h1 class="title">Including snippets</h1>
+<p>
+<a href="https://www.cs.tufts.edu/~nr/noweb/">noweb</a> syntax provides a really nifty way to split up or even autogenerate code
+blocks in orgmode documents. When writing literate documents noweb syntax also
+provides one with a way of staying on topic, whenever these files become more
+complex. If you&rsquo;ve never used noweb syntax in orgmode you should definitely look
+it up.
+</p>
+
+<p>
+One thing that is missing however was the the ability to include orgfiles containing
+noweb extensions and then use the snippets in another file like this:
+</p>
+
+<div class="org-src-container">
+<pre><code class="org">#+setupfile: snippet_collection.org
+# or:
+#+include: snippet_collection.org
+</code></pre>
 </div>
+
+<p>
+Using the <a href="https://orgmode.org/worg/library-of-babel.html">library of babel</a> we can load snippets from other files like this:
+</p>
+<div class="org-src-container">
+<pre><code class="emacs-lisp">(org-babel-lob-ingest "./path/to/snippet_collection.org")
+</code></pre>
+</div>
+
+<p>
+It is also possible to use a little function like this in order to load multiple
+files from a directory:
+</p>
+<div class="org-src-container">
+<pre><code class="emacs-lisp">(loop for filename in (file-expand-wildcards "./path/to/snippet_collection/*.org") collect (org-babel-lob-ingest filename))
+</code></pre>
+</div>
+
+<p>
+Now in order to load the snippets upon opening the orgmode file add something
+like this or set up a <code>.dir-locals.el</code> file:
+</p>
+<pre class="example">
+# Local Variables:
+# eval: (loop for filename in (file-expand-wildcards "./dir/*.org") collect (org-babel-lob-ingest filename))
+# End:
+</pre>
+
+<p>
+Of course instead of adding this line to every single file, it is also possible
+to create a setupfile containing these variables and to load the snippets using
+something like this:
+</p>
+
+<div class="org-src-container">
+<pre><code class="org">#+setupfile: snippet_collection.org
+# or:
+#+include: snippet_collection.org
+</code></pre>
+</div>
+
+
+<script src=https://utteranc.es/client.js
+        repo=observer/observer.github.io
+        issue-term=url
+        label=💬
+        theme=github-light
+        crossorigin=anonymous
+        async>
+</script>
 </div>
 </body>
 </html>

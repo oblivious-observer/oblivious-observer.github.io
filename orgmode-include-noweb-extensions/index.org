@@ -1,0 +1,54 @@
+# -*- org-confirm-babel-evaluate: nil; -*-
+#+title: Including snippets
+#+filetags: :Emacs:orgmode:noweb:
+#+date: <2020-09-14 Mon>
+#+description: How to include noweb snippets from other files in orgmode
+#+options: html-postamble:nil
+#+include: ../../templates/default.org
+
+[[https://www.cs.tufts.edu/~nr/noweb/][noweb]] syntax provides a really nifty way to split up or even autogenerate code
+blocks in orgmode documents. When writing literate documents noweb syntax also
+provides one with a way of staying on topic, whenever these files become more
+complex. If you've never used noweb syntax in orgmode you should definitely look
+it up.
+
+One thing that is missing however was the the ability to include orgfiles containing
+noweb extensions and then use the snippets in another file like this:
+
+#+BEGIN_SRC org
+#+setupfile: snippet_collection.org
+# or:
+#+include: snippet_collection.org
+#+END_SRC
+
+Using the [[https://orgmode.org/worg/library-of-babel.html][library of babel]] we can load snippets from other files like this:
+#+BEGIN_SRC emacs-lisp
+(org-babel-lob-ingest "./path/to/snippet_collection.org")
+#+END_SRC
+
+It is also possible to use a little function like this in order to load multiple
+files from a directory:
+#+BEGIN_SRC emacs-lisp
+(loop for filename in (file-expand-wildcards "./path/to/snippet_collection/*.org") collect (org-babel-lob-ingest filename))
+#+END_SRC
+
+Now in order to load the snippets upon opening the orgmode file add something
+like this or set up a ~.dir-locals.el~ file:
+#+BEGIN_EXAMPLE org
+# Local Variables:
+# eval: (loop for filename in (file-expand-wildcards "./dir/*.org") collect (org-babel-lob-ingest filename))
+# End:
+#+END_EXAMPLE
+
+Of course instead of adding this line to every single file, it is also possible
+to create a setupfile containing these variables and to load the snippets using
+something like this:
+
+#+BEGIN_SRC org
+#+setupfile: snippet_collection.org
+# or:
+#+include: snippet_collection.org
+#+END_SRC
+
+* Comments :ignore:
+#+include: ../../templates/comments.org
