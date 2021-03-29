@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>libguestfs on oblivious observer</title>
+    <link>https://oblivious.observer/tags/libguestfs/</link>
+    <description>Recent content in libguestfs on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sat, 29 Aug 2020 00:00:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/tags/libguestfs/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>NixOS encrypted VM installation</title>
+      <link>https://oblivious.observer/posts/nixos-20.03-luks-zfs-kvm/</link>
+      <pubDate>Sat, 29 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/nixos-20.03-luks-zfs-kvm/</guid>
+      <description>In this post I&amp;rsquo;ll describe how to set up a sparse VM image with full disk encryption and NixOS on ZFS, which can be uploaded to a VPS provider and then unlocked on boot using ssh.
+First we need to create a virtual machine image file. Initially I tried using qemu-img, but somehow the image file was missing some information and the VM would not recognize a disk. Instead I went with the easy way and used virt-manager to create a new VM with the correct image size.</description>
+    </item>
+    
+  </channel>
+</rss>

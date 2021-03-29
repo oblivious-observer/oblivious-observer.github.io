@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>proxmox on oblivious observer</title>
+    <link>https://oblivious.observer/tags/proxmox/</link>
+    <description>Recent content in proxmox on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Tue, 29 Oct 2019 00:00:00 +0100</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/tags/proxmox/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Introducing a Boot Environment Manager for Proxmox</title>
+      <link>https://oblivious.observer/posts/proxmoxve6-boot-environment-manager/</link>
+      <pubDate>Tue, 29 Oct 2019 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/posts/proxmoxve6-boot-environment-manager/</guid>
+      <description>This post introduces a fork of the FreeBSD beadm utility which can be used to manage Boot Environments on Proxmox ZFS Installations.
+In this Post I will showcase how to use the beadm Boot Environment manager in Proxmox. After the showcase there are some notes on what I did to make beadm run on Linux in general and finally a part about what has been changed in order to make beadm work with Proxmox specifically.</description>
+    </item>
+    
+    <item>
+      <title>Proof of Concept: Adding Boot Environments to Proxmox VE 6</title>
+      <link>https://oblivious.observer/posts/poc-boot-environments-proxmoxve6/</link>
+      <pubDate>Wed, 28 Aug 2019 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/poc-boot-environments-proxmoxve6/</guid>
+      <description>Dear Reader, this time I would like to invite you onto a small journey: To boldly go where no man has gone before (Alright, that&amp;rsquo;s not true, but I think it&amp;rsquo;s the first time someone documents this kind of thing in the context of Proxmox). We&amp;rsquo;re about to embark on a journey to make your Proxmox host quite literally immortal. Also since what we are essentially doing here is only a Proof of concept, you probably shouldn&amp;rsquo;t use it in production, but as it&amp;rsquo;s really amazing, so you might want to try it out in a test environment.</description>
+    </item>
+    
+    <item>
+      <title>Encrypting Proxmox VE 6: ZFS, LUKS, systemd-boot and Dropbear</title>
+      <link>https://oblivious.observer/posts/proxmoxve6-zfs-luks-systemdboot-dropbear/</link>
+      <pubDate>Fri, 23 Aug 2019 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/proxmoxve6-zfs-luks-systemdboot-dropbear/</guid>
+      <description>This describes how to set up a fully encrypted Proxmox VE 6 host with ZFS root and unlocking it remotely using the dropbear ssh server. Also it describes how you can do that, while keeping systemd-boot and thus also the pve tooling intact. (I&amp;rsquo;m not sure if the pve tooling still works if you replace systemd-boot with grub, which seems to be the common solution to creating this kind of setup, maybe it does.</description>
+    </item>
+    
+  </channel>
+</rss>

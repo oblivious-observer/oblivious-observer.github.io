@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on oblivious observer</title>
+    <link>https://oblivious.observer/tags/</link>
+    <description>Recent content in Tags on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Mon, 22 Mar 2021 00:00:00 +0100</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>hugo</title>
+      <link>https://oblivious.observer/tags/hugo/</link>
+      <pubDate>Mon, 22 Mar 2021 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/tags/hugo/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>NixOS</title>
+      <link>https://oblivious.observer/tags/nixos/</link>
+      <pubDate>Mon, 22 Mar 2021 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/tags/nixos/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>orgmode</title>
+      <link>https://oblivious.observer/tags/orgmode/</link>
+      <pubDate>Mon, 22 Mar 2021 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/tags/orgmode/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Emacs</title>
+      <link>https://oblivious.observer/tags/emacs/</link>
+      <pubDate>Mon, 14 Sep 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/tags/emacs/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>noweb</title>
+      <link>https://oblivious.observer/tags/noweb/</link>
+      <pubDate>Mon, 14 Sep 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/tags/noweb/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>dropbear</title>
+      <link>https://oblivious.observer/tags/dropbear/</link>
+      <pubDate>Sat, 29 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/tags/dropbear/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>libguestfs</title>
+      <link>https://oblivious.observer/tags/libguestfs/</link>
+      <pubDate>Sat, 29 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/tags/libguestfs/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>LUKS</title>
+      <link>https://oblivious.observer/tags/luks/</link>
+      <pubDate>Sat, 29 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/tags/luks/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>ZFS</title>
+      <link>https://oblivious.observer/tags/zfs/</link>
+      <pubDate>Sat, 29 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/tags/zfs/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>bash</title>
+      <link>https://oblivious.observer/tags/bash/</link>
+      <pubDate>Sat, 22 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/tags/bash/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>org-publish</title>
+      <link>https://oblivious.observer/tags/org-publish/</link>
+      <pubDate>Sat, 22 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/tags/org-publish/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>beadm</title>
+      <link>https://oblivious.observer/tags/beadm/</link>
+      <pubDate>Tue, 29 Oct 2019 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/tags/beadm/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>proxmox</title>
+      <link>https://oblivious.observer/tags/proxmox/</link>
+      <pubDate>Tue, 29 Oct 2019 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/tags/proxmox/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>systemd-boot</title>
+      <link>https://oblivious.observer/tags/systemd-boot/</link>
+      <pubDate>Tue, 29 Oct 2019 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/tags/systemd-boot/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

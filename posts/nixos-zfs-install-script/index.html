@@ -1,0 +1,126 @@
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>NixOS on ZFS Install Script | oblivious observer</title><meta name=keywords content="NixOS,ZFS"><meta name=description content="This is a rather short post and the start of what will hopefully become a nice little series of posts related to NixOS.
+I just had to bulk install NixOS on a bunch of Intel NUCs, here is a little script to automate the installation process. Some bits and pieces are taken from other installation scripts, but it&rsquo;s been a while, so I don&rsquo;t know who to credit for them, I&rsquo;m fairly sure this wonderful post from the NixOS discourse was involved though."><meta name=author content="oblivious observer"><link rel=canonical href=https://oblivious.observer/posts/nixos-zfs-install-script/><link href=/assets/css/stylesheet.min.2fe20f8bc0dfa5e1b6cdbdf2cd0ff90da85d80a5d39aced2f9ff00407eedffde.css integrity="sha256-L+IPi8DfpeG2zb3yzQ/5DahdgKXTms7S+f8AQH7t/94=" rel="preload stylesheet" as=style><link rel=icon href=https://oblivious.observer/observer-16x16.png><link rel=icon type=image/png sizes=16x16 href=https://oblivious.observer/observer-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://oblivious.observer/observer-32x32.png><link rel=apple-touch-icon href=https://oblivious.observer/observer-512x512.png><link rel=mask-icon href=https://oblivious.observer/observer-512x512.png><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><meta name=generator content="Hugo 0.74.3"><meta property="og:title" content="NixOS on ZFS Install Script"><meta property="og:description" content="This is a rather short post and the start of what will hopefully become a nice little series of posts related to NixOS.
+I just had to bulk install NixOS on a bunch of Intel NUCs, here is a little script to automate the installation process. Some bits and pieces are taken from other installation scripts, but it&rsquo;s been a while, so I don&rsquo;t know who to credit for them, I&rsquo;m fairly sure this wonderful post from the NixOS discourse was involved though."><meta property="og:type" content="article"><meta property="og:url" content="https://oblivious.observer/posts/nixos-zfs-install-script/"><meta property="og:image" content="https://oblivious.observer/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta property="article:published_time" content="2020-08-26T00:00:00+02:00"><meta property="article:modified_time" content="2020-08-26T00:00:00+02:00"><meta property="og:site_name" content="oblivious.observer"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://oblivious.observer/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta name=twitter:title content="NixOS on ZFS Install Script"><meta name=twitter:description content="This is a rather short post and the start of what will hopefully become a nice little series of posts related to NixOS.
+I just had to bulk install NixOS on a bunch of Intel NUCs, here is a little script to automate the installation process. Some bits and pieces are taken from other installation scripts, but it&rsquo;s been a while, so I don&rsquo;t know who to credit for them, I&rsquo;m fairly sure this wonderful post from the NixOS discourse was involved though."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":2,"name":"Posts","item":"https://oblivious.observer/posts/"},{"@type":"ListItem","position":3,"name":"NixOS on ZFS Install Script","item":"https://oblivious.observer/posts/nixos-zfs-install-script/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"NixOS on ZFS Install Script","name":"NixOS on ZFS Install Script","description":"This is a rather short post and the start of what will hopefully become a nice little series of posts related to NixOS.\nI just had to bulk install NixOS on a bunch of Intel NUCs, …","keywords":["NixOS","ZFS"],"articleBody":"This is a rather short post and the start of what will hopefully become a nice little series of posts related to NixOS.\nI just had to bulk install NixOS on a bunch of Intel NUCs, here is a little script to automate the installation process. Some bits and pieces are taken from other installation scripts, but it’s been a while, so I don’t know who to credit for them, I’m fairly sure this wonderful post from the NixOS discourse was involved though. The whole script can be found here as gist as well.\nStart with the usual #! and set the script up to exit on errors using set -e:\n#!/usr/bin/env bash set -e Next add a function for pretty printing, (I stole this part from somewhere else).\npprint () { local cyan=\"\\e[96m\" local default=\"\\e[39m\" # ISO8601 timestamp + ms local timestamp timestamp=$(date +%FT%T.%3NZ) echo -e \"${cyan}${timestamp}$1${default}\" 1\u00262 } Instead of using a DISK variable and changing its value inside the script everytime it is run, simply let the user pick the device.\necho \"These are the disks available:\" ls -l /dev/disk/by-id/ | awk '{print $11, $10, $9}' | tr -d './' | column -t echo # Set DISK select ENTRY in $(ls /dev/disk/by-id/); do echo $ENTRY DISK=\"/dev/disk/by-id/$ENTRY\" echo \"Installing system on $ENTRY.\" break done Next set up the SWAP Size:\necho -n \"Enter Swap size (e.g. 10GiB, 5MiB)\" echo read SWAP_SIZE if [[ $SWAP_SIZE =~ ^[0-9]*(GiB|MiB)$ ]] then echo \"Swap size set to $SWAP_SIZE\" else echo \"Please enter correct size\" break fi Ask for confirmation and wipe the disk:\nread -p \" Do you want to wipe all data on $ENTRY?\" -n 1 -r echo # move to a new line if [[ \"$REPLY\" =~ ^[Yy]$ ]] then # Clear disk wipefs -af \"$DISK\" sgdisk -Zo \"$DISK\" partprobe $DISK else exit 1 fi Initially I was using sgdisk in order to create all partitions. This usually seems to work, however I noticed, that on some hardware devices (NUC Canyons), the boot flag had to be set in order for them to actually boot up, so i switched to parted instead.\nparted $DISK -- mklabel gpt pprint \"Creating system partition\" parted $DISK -- mkpart primary 512MiB -${SWAP_SIZE} ROOT=\"$DISK-part1\" pprint \"Creating swap partition\" parted $DISK -- mkpart primary linux-swap -${SWAP_SIZE} 100% SWAP=\"$DISK-part2\" pprint \"Creating boot (EFI) partition\" parted $DISK -- mkpart ESP fat32 1MiB 512MiB parted $DISK -- set 3 boot on BOOT=\"$DISK-part3\" pprint \"Running partprobe on $DISK\" partprobe $DISK Now that the partitions have been created, lets create filesystems and mount them. The sleep at the beginning seems to be necessary, otherwise there are problems with creating the swap partition.\nsleep 2 # not sure why, but if we don't wait, the following swap does not work properly pprint \"Enable SWAP on $SWAP\" mkswap -L swap $SWAP swapon -L swap # ZFS partition pprint \"Create zfs pool rpool\" zpool create -f -O mountpoint=none -O acltype=posixacl -O xattr=sa -R /mnt rpool $ROOT pprint \"Create zfs dataset rpool/root\" zfs create -o mountpoint=none rpool/root pprint \"Create zfs dataset rpool/root/nixos\" zfs create -o mountpoint=legacy rpool/root/nixos pprint \"Create zfs dataset rpool/home\" zfs create -o mountpoint=legacy rpool/home pprint \"Mount datasets: rpool/root/nixos\" mount -t zfs rpool/root/nixos /mnt pprint \"Mount datasets: rpool/home\" mkdir /mnt/home mount -t zfs rpool/home /mnt/home pprint \"Mount boot partition\" mkfs.fat -F 32 -n boot $BOOT mkdir /mnt/boot mount $BOOT /mnt/boot Finally create a nixos configuration and set the system up to boot from ZFS:\npprint \"Generate NixOS configuration\" nixos-generate-config --root /mnt # Add ZFS configuration HOSTID=$(head -c8 /etc/machine-id) HARDWARE_CONFIG=$(mktemp) cat \"$HARDWARE_CONFIG\" networking.hostId = \"$HOSTID\"; boot.supportedFilesystems = [ \"zfs\" ]; boot.zfs.devNodes = \"$ROOT\"; } CONFIG #pprint \"Append configuration to hardware-configuration.nix\" sed -i \"\\$ s/.}\\$//;\\$e cat $HARDWARE_CONFIG\" /mnt/etc/nixos/configuration.nix pprint \"You can now install nixos using the 'nixos-install' command.\" ","wordCount":"626","inLanguage":"en","datePublished":"2020-08-26T00:00:00+02:00","dateModified":"2020-08-26T00:00:00+02:00","author":[{"@type":"Person","name":"oblivious observer"}],"mainEntityOfPage":{"@type":"WebPage","@id":"https://oblivious.observer/posts/nixos-zfs-install-script/"},"publisher":{"@type":"Organization","name":"oblivious observer","logo":{"@type":"ImageObject","url":"https://oblivious.observer/observer-16x16.png"}}}</script></head><body id=top><script>if(localStorage.getItem("pref-theme")==="dark"){document.body.classList.add('dark');}else if(localStorage.getItem("pref-theme")==="light"){document.body.classList.remove('dark')}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.body.classList.add('dark');}</script><noscript><style type=text/css>#theme-toggle,.top-link{display:none}@media(prefers-color-scheme:dark){:root{--theme: #1d1e20;--entry: #2e2e33;--primary: rgba(255, 255, 255, 0.84);--secondary: rgba(255, 255, 255, 0.56);--tertiary: rgba(255, 255, 255, 0.16);--content: rgba(255, 255, 255, 0.74);--hljs-bg: #2e2e33;--code-bg: #37383e;--border: #333}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><header class=header><nav class=nav><div class=logo><a href=https://oblivious.observer accesskey=h title="(Alt + H)"><img src=/observer-64x64.png alt=logo aria-label=logo height=35></a>
+<span class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></span></div><ul id=menu onscroll=menu_on_scroll()><li><a href=https://oblivious.observer/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li><li><a href=https://oblivious.observer/posts/ title=posts><span>posts</span></a></li><li><a href=https://oblivious.observer/archives/ title=archive><span>archive</span></a></li><li><a href=https://oblivious.observer/tags/ title=tags><span>tags</span></a></li><li><a href=https://oblivious.observer/index.html title=about><span>about</span></a></li><li><a href=https://oblivious.observer/index.xml title=rss><span>rss</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><h1 class=post-title>NixOS on ZFS Install Script</h1><div class=post-meta>August 26, 2020&nbsp;·&nbsp;3 min&nbsp;·&nbsp;oblivious observer</div></header><div class=post-content><p>This is a rather short post and the start of what will hopefully become a nice
+little series of posts related to NixOS.</p><p>I just had to bulk install NixOS on a bunch of Intel NUCs, here is a little
+script to automate the installation process. Some bits and pieces are taken from
+other installation scripts, but it&rsquo;s been a while, so I don&rsquo;t know who to credit
+for them, I&rsquo;m fairly sure this <a href="https://discourse.nixos.org/t/nixos-on-luks-encrypted-partition-with-zfs-and-swap/6873?u=observer">wonderful post</a> from the NixOS discourse was
+involved though. The whole script can be found <a href=https://gist.githubusercontent.com/observer/ceded0ee4468c931c716b5b2ddc07e77/raw/fb7ca15c62937fd570a7c045b4346d521ba75610/gistfile1.txt>here</a> as gist as well.</p><p>Start with the usual <code>#!</code> and set the script up to exit on errors using <code>set -e</code>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#75715e>#!/usr/bin/env bash
+</span><span style=color:#75715e></span>set -e
+</code></pre></div><p>Next add a function for pretty printing, (I stole this part from somewhere else).</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>pprint <span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+    local cyan<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;\e[96m&#34;</span>
+    local default<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;\e[39m&#34;</span>
+    <span style=color:#75715e># ISO8601 timestamp + ms</span>
+    local timestamp
+    timestamp<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>date +%FT%T.%3NZ<span style=color:#66d9ef>)</span>
+    echo -e <span style=color:#e6db74>&#34;</span><span style=color:#e6db74>${</span>cyan<span style=color:#e6db74>}${</span>timestamp<span style=color:#e6db74>}</span><span style=color:#e6db74> </span>$1<span style=color:#e6db74>${</span>default<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span> 1&gt;&amp;<span style=color:#ae81ff>2</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><p>Instead of using a <code>DISK</code> variable and changing its value inside the script
+everytime it is run, simply let the user pick the device.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>echo <span style=color:#e6db74>&#34;These are the disks available:&#34;</span>
+ls -l /dev/disk/by-id/ | awk <span style=color:#e6db74>&#39;{print $11, $10, $9}&#39;</span> | tr -d <span style=color:#e6db74>&#39;./&#39;</span> | column -t
+echo
+
+<span style=color:#75715e># Set DISK</span>
+<span style=color:#66d9ef>select</span> ENTRY in <span style=color:#66d9ef>$(</span>ls /dev/disk/by-id/<span style=color:#66d9ef>)</span>;
+<span style=color:#66d9ef>do</span>
+    echo $ENTRY
+    DISK<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;/dev/disk/by-id/</span>$ENTRY<span style=color:#e6db74>&#34;</span>
+    echo <span style=color:#e6db74>&#34;Installing system on </span>$ENTRY<span style=color:#e6db74>.&#34;</span>
+    break
+<span style=color:#66d9ef>done</span>
+</code></pre></div><p>Next set up the SWAP Size:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>echo -n <span style=color:#e6db74>&#34;Enter Swap size (e.g. 10GiB, 5MiB)&#34;</span>
+echo
+read SWAP_SIZE
+<span style=color:#66d9ef>if</span> <span style=color:#f92672>[[</span> $SWAP_SIZE <span style=color:#f92672>=</span>~ ^<span style=color:#f92672>[</span>0-9<span style=color:#f92672>]</span>*<span style=color:#f92672>(</span>GiB|MiB<span style=color:#f92672>)</span>$ <span style=color:#f92672>]]</span>
+<span style=color:#66d9ef>then</span>
+  echo <span style=color:#e6db74>&#34;Swap size set to </span>$SWAP_SIZE<span style=color:#e6db74>&#34;</span>
+<span style=color:#66d9ef>else</span>
+  echo <span style=color:#e6db74>&#34;Please enter correct size&#34;</span>
+  break
+<span style=color:#66d9ef>fi</span>
+</code></pre></div><p>Ask for confirmation and wipe the disk:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>read -p <span style=color:#e6db74>&#34;&gt; Do you want to wipe all data on </span>$ENTRY<span style=color:#e6db74> ?&#34;</span> -n <span style=color:#ae81ff>1</span> -r
+echo <span style=color:#75715e># move to a new line</span>
+<span style=color:#66d9ef>if</span> <span style=color:#f92672>[[</span> <span style=color:#e6db74>&#34;</span>$REPLY<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>=</span>~ ^<span style=color:#f92672>[</span>Yy<span style=color:#f92672>]</span>$ <span style=color:#f92672>]]</span>
+<span style=color:#66d9ef>then</span>
+    <span style=color:#75715e># Clear disk</span>
+    wipefs -af <span style=color:#e6db74>&#34;</span>$DISK<span style=color:#e6db74>&#34;</span>
+    sgdisk -Zo <span style=color:#e6db74>&#34;</span>$DISK<span style=color:#e6db74>&#34;</span>
+    partprobe $DISK
+<span style=color:#66d9ef>else</span>
+    exit <span style=color:#ae81ff>1</span>
+<span style=color:#66d9ef>fi</span>
+</code></pre></div><p>Initially I was using <code>sgdisk</code> in order to create all partitions. This usually
+seems to work, however I noticed, that on some hardware devices (NUC Canyons),
+the boot flag had to be set in order for them to actually boot up, so i switched
+to <code>parted</code> instead.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>parted $DISK -- mklabel gpt
+
+pprint <span style=color:#e6db74>&#34;Creating system partition&#34;</span>
+parted $DISK -- mkpart primary 512MiB -<span style=color:#e6db74>${</span>SWAP_SIZE<span style=color:#e6db74>}</span>
+ROOT<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span>$DISK<span style=color:#e6db74>-part1&#34;</span>
+
+pprint <span style=color:#e6db74>&#34;Creating swap partition&#34;</span>
+parted $DISK -- mkpart primary linux-swap -<span style=color:#e6db74>${</span>SWAP_SIZE<span style=color:#e6db74>}</span> 100%
+SWAP<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span>$DISK<span style=color:#e6db74>-part2&#34;</span>
+
+pprint <span style=color:#e6db74>&#34;Creating boot (EFI) partition&#34;</span>
+parted $DISK -- mkpart ESP fat32 1MiB 512MiB
+parted $DISK -- set <span style=color:#ae81ff>3</span> boot on
+BOOT<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span>$DISK<span style=color:#e6db74>-part3&#34;</span>
+
+pprint <span style=color:#e6db74>&#34;Running partprobe on </span>$DISK<span style=color:#e6db74>&#34;</span>
+partprobe $DISK
+</code></pre></div><p>Now that the partitions have been created, lets create filesystems and mount
+them. The <code>sleep</code> at the beginning seems to be necessary, otherwise there are
+problems with creating the swap partition.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>sleep <span style=color:#ae81ff>2</span> <span style=color:#75715e># not sure why, but if we don&#39;t wait, the following swap does not work properly</span>
+
+pprint <span style=color:#e6db74>&#34;Enable SWAP on </span>$SWAP<span style=color:#e6db74>&#34;</span>
+mkswap -L swap $SWAP
+swapon -L swap
+
+<span style=color:#75715e># ZFS partition</span>
+pprint <span style=color:#e6db74>&#34;Create zfs pool rpool&#34;</span>
+zpool create -f -O mountpoint<span style=color:#f92672>=</span>none -O acltype<span style=color:#f92672>=</span>posixacl -O xattr<span style=color:#f92672>=</span>sa -R /mnt rpool $ROOT
+
+pprint <span style=color:#e6db74>&#34;Create zfs dataset rpool/root&#34;</span>
+zfs create -o mountpoint<span style=color:#f92672>=</span>none   rpool/root
+pprint <span style=color:#e6db74>&#34;Create zfs dataset rpool/root/nixos&#34;</span>
+zfs create -o mountpoint<span style=color:#f92672>=</span>legacy rpool/root/nixos
+pprint <span style=color:#e6db74>&#34;Create zfs dataset rpool/home&#34;</span>
+zfs create -o mountpoint<span style=color:#f92672>=</span>legacy rpool/home
+
+pprint <span style=color:#e6db74>&#34;Mount datasets: rpool/root/nixos&#34;</span>
+mount -t zfs rpool/root/nixos /mnt
+
+pprint <span style=color:#e6db74>&#34;Mount datasets: rpool/home&#34;</span>
+mkdir /mnt/home
+mount -t zfs rpool/home /mnt/home
+
+
+pprint <span style=color:#e6db74>&#34;Mount boot partition&#34;</span>
+mkfs.fat -F <span style=color:#ae81ff>32</span> -n boot $BOOT
+mkdir /mnt/boot
+mount $BOOT /mnt/boot
+</code></pre></div><p>Finally create a nixos configuration and set the system up to boot from ZFS:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>pprint <span style=color:#e6db74>&#34;Generate NixOS configuration&#34;</span>
+nixos-generate-config --root /mnt
+
+<span style=color:#75715e># Add ZFS configuration</span>
+HOSTID<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>head -c8 /etc/machine-id<span style=color:#66d9ef>)</span>
+
+HARDWARE_CONFIG<span style=color:#f92672>=</span><span style=color:#66d9ef>$(</span>mktemp<span style=color:#66d9ef>)</span>
+cat <span style=color:#e6db74>&lt;&lt; CONFIG &gt; &#34;$HARDWARE_CONFIG</span><span style=color:#e6db74>&#34;
+</span><span style=color:#e6db74>networking.hostId = &#34;</span>$HOSTID<span style=color:#e6db74>&#34;;
+</span><span style=color:#e6db74>boot.supportedFilesystems = [ &#34;</span>zfs<span style=color:#e6db74>&#34; ];
+</span><span style=color:#e6db74>boot.zfs.devNodes = &#34;</span>$ROOT<span style=color:#e6db74>&#34;;
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>CONFIG
+</span><span style=color:#e6db74>
+</span><span style=color:#e6db74>#pprint &#34;</span>Append configuration to hardware-configuration.nix<span style=color:#e6db74>&#34;
+</span><span style=color:#e6db74>sed -i &#34;</span><span style=color:#ae81ff>\$</span> s/.<span style=color:#f92672>}</span><span style=color:#ae81ff>\$</span>//;<span style=color:#ae81ff>\$</span>e cat $HARDWARE_CONFIG<span style=color:#e6db74>&#34; /mnt/etc/nixos/configuration.nix
+</span><span style=color:#e6db74>
+</span><span style=color:#e6db74>pprint &#34;</span>You can now install nixos using the <span style=color:#e6db74>&#39;nixos-install&#39;</span> command.<span style=color:#e6db74>&#34;
+</span></code></pre></div></div><footer class=post-footer><ul class=post-tags><li><a href=https://oblivious.observer/tags/nixos/>NixOS</a></li><li><a href=https://oblivious.observer/tags/zfs/>ZFS</a></li></ul></footer><script src=https://utteranc.es/client.js repo=observer/observer.github.io issue-term=url label=💬 theme=photon-dark crossorigin=anonymous async></script></article></main><a href=#top aria-label="go to top" title="Go to Top (Alt + G)"><button class=top-link id=top-link type=button accesskey=g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg></button></a>
+<script defer src=/assets/js/highlight.min.27cd435cc9ed6abb4b496581b151804f79f366c412620272bb94e2f5f598ebcc.js integrity="sha256-J81DXMntartLSWWBsVGAT3nzZsQSYgJyu5Ti9fWY68w=" onload=hljs.initHighlightingOnLoad();></script><script>window.onload=function(){if(localStorage.getItem("menu-scroll-position")){document.getElementById('menu').scrollLeft=localStorage.getItem("menu-scroll-position");}}
+document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener("click",function(e){e.preventDefault();var id=this.getAttribute("href").substr(1);if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({behavior:"smooth"});}else{document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();}
+if(id==="top"){history.replaceState(null,null," ");}else{history.pushState(null,null,`#${id}`);}});});var mybutton=document.getElementById("top-link");window.onscroll=function(){if(document.body.scrollTop>800||document.documentElement.scrollTop>800){mybutton.style.visibility="visible";mybutton.style.opacity="1";}else{mybutton.style.visibility="hidden";mybutton.style.opacity="0";}};function menu_on_scroll(){localStorage.setItem("menu-scroll-position",document.getElementById('menu').scrollLeft);}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{if(document.body.className.includes("dark")){document.body.classList.remove('dark');localStorage.setItem("pref-theme",'light');}else{document.body.classList.add('dark');localStorage.setItem("pref-theme",'dark');}})</script></body></html>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>NixOS on oblivious observer</title>
+    <link>https://oblivious.observer/tags/nixos/</link>
+    <description>Recent content in NixOS on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Mon, 22 Mar 2021 00:00:00 +0100</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/tags/nixos/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Blogging with orgmode, hugo and nix</title>
+      <link>https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/</link>
+      <pubDate>Mon, 22 Mar 2021 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/</guid>
+      <description>How I yet again decided to set up another iteration of this blog. This time using nix, hugo and of course orgmode..
+Introduction This is my third attempt of setting up an easy to use blogging workflow. The first time I chose to try out use ox-hugo as well as github pages. Initially everything worked, but I quickly stopped writing posts because my initial setup using a single orgmode file with ox-hugo did not match my notetaking workflow, where I basically generate a bunch of random files and some of them get reworked or updated enough for me to think about publishing them.</description>
+    </item>
+    
+    <item>
+      <title>NixOS encrypted VM installation</title>
+      <link>https://oblivious.observer/posts/nixos-20.03-luks-zfs-kvm/</link>
+      <pubDate>Sat, 29 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/nixos-20.03-luks-zfs-kvm/</guid>
+      <description>In this post I&amp;rsquo;ll describe how to set up a sparse VM image with full disk encryption and NixOS on ZFS, which can be uploaded to a VPS provider and then unlocked on boot using ssh.
+First we need to create a virtual machine image file. Initially I tried using qemu-img, but somehow the image file was missing some information and the VM would not recognize a disk. Instead I went with the easy way and used virt-manager to create a new VM with the correct image size.</description>
+    </item>
+    
+    <item>
+      <title>NixOS on ZFS Install Script</title>
+      <link>https://oblivious.observer/posts/nixos-zfs-install-script/</link>
+      <pubDate>Wed, 26 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/nixos-zfs-install-script/</guid>
+      <description>This is a rather short post and the start of what will hopefully become a nice little series of posts related to NixOS.
+I just had to bulk install NixOS on a bunch of Intel NUCs, here is a little script to automate the installation process. Some bits and pieces are taken from other installation scripts, but it&amp;rsquo;s been a while, so I don&amp;rsquo;t know who to credit for them, I&amp;rsquo;m fairly sure this wonderful post from the NixOS discourse was involved though.</description>
+    </item>
+    
+  </channel>
+</rss>

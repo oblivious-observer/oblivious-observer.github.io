@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>noweb on oblivious observer</title>
+    <link>https://oblivious.observer/tags/noweb/</link>
+    <description>Recent content in noweb on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Mon, 14 Sep 2020 00:00:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/tags/noweb/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Including noweb snippets in orgmode</title>
+      <link>https://oblivious.observer/posts/orgmode-include-noweb-extensions/</link>
+      <pubDate>Mon, 14 Sep 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/orgmode-include-noweb-extensions/</guid>
+      <description>This is a bit of a strange one, but in case anyone else goes down the rabbit hole of using noweb inside orgmode, this might be interesting.
+noweb syntax provides a really nifty way to split up or even autogenerate code blocks in orgmode documents. When writing literate documents noweb syntax also provides one with a way of staying on topic, whenever these files become more complex. If you&amp;rsquo;ve never used noweb syntax in orgmode you should definitely look it up.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>hugo on oblivious observer</title>
+    <link>https://oblivious.observer/tags/hugo/</link>
+    <description>Recent content in hugo on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Mon, 22 Mar 2021 00:00:00 +0100</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/tags/hugo/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Blogging with orgmode, hugo and nix</title>
+      <link>https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/</link>
+      <pubDate>Mon, 22 Mar 2021 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/</guid>
+      <description>How I yet again decided to set up another iteration of this blog. This time using nix, hugo and of course orgmode..
+Introduction This is my third attempt of setting up an easy to use blogging workflow. The first time I chose to try out use ox-hugo as well as github pages. Initially everything worked, but I quickly stopped writing posts because my initial setup using a single orgmode file with ox-hugo did not match my notetaking workflow, where I basically generate a bunch of random files and some of them get reworked or updated enough for me to think about publishing them.</description>
+    </item>
+    
+  </channel>
+</rss>

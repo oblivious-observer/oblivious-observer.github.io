@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>orgmode on oblivious observer</title>
+    <link>https://oblivious.observer/tags/orgmode/</link>
+    <description>Recent content in orgmode on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Mon, 22 Mar 2021 00:00:00 +0100</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/tags/orgmode/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Blogging with orgmode, hugo and nix</title>
+      <link>https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/</link>
+      <pubDate>Mon, 22 Mar 2021 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/</guid>
+      <description>How I yet again decided to set up another iteration of this blog. This time using nix, hugo and of course orgmode..
+Introduction This is my third attempt of setting up an easy to use blogging workflow. The first time I chose to try out use ox-hugo as well as github pages. Initially everything worked, but I quickly stopped writing posts because my initial setup using a single orgmode file with ox-hugo did not match my notetaking workflow, where I basically generate a bunch of random files and some of them get reworked or updated enough for me to think about publishing them.</description>
+    </item>
+    
+    <item>
+      <title>Including noweb snippets in orgmode</title>
+      <link>https://oblivious.observer/posts/orgmode-include-noweb-extensions/</link>
+      <pubDate>Mon, 14 Sep 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/orgmode-include-noweb-extensions/</guid>
+      <description>This is a bit of a strange one, but in case anyone else goes down the rabbit hole of using noweb inside orgmode, this might be interesting.
+noweb syntax provides a really nifty way to split up or even autogenerate code blocks in orgmode documents. When writing literate documents noweb syntax also provides one with a way of staying on topic, whenever these files become more complex. If you&amp;rsquo;ve never used noweb syntax in orgmode you should definitely look it up.</description>
+    </item>
+    
+    <item>
+      <title>Introducing oblivious</title>
+      <link>https://oblivious.observer/posts/introducing-oblivious/</link>
+      <pubDate>Sat, 22 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/introducing-oblivious/</guid>
+      <description>There is a new static site generator on the block.. also hello world..
+Update (2021): guess what, I&amp;rsquo;m back to hugo.. Not necessarily because I started to dislike the idea of oblivious, I think it still is a pretty interesting concept and I particularly love the idea of being able to create a site, while having minimal dependencies and being pretty much language agnostic. The reason I switched was that on the one hand I got a bit more involved with NixOS, which seems to be even better suited to some of the things oblivious ended up taking care of (such as fetching resources) and on the other hand I just want to be able to publish something by pressing a bunch of keys without having to actively maintain the underlying tooling.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>bash on oblivious observer</title>
+    <link>https://oblivious.observer/tags/bash/</link>
+    <description>Recent content in bash on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sat, 22 Aug 2020 00:00:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/tags/bash/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Introducing oblivious</title>
+      <link>https://oblivious.observer/posts/introducing-oblivious/</link>
+      <pubDate>Sat, 22 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/introducing-oblivious/</guid>
+      <description>There is a new static site generator on the block.. also hello world..
+Update (2021): guess what, I&amp;rsquo;m back to hugo.. Not necessarily because I started to dislike the idea of oblivious, I think it still is a pretty interesting concept and I particularly love the idea of being able to create a site, while having minimal dependencies and being pretty much language agnostic. The reason I switched was that on the one hand I got a bit more involved with NixOS, which seems to be even better suited to some of the things oblivious ended up taking care of (such as fetching resources) and on the other hand I just want to be able to publish something by pressing a bunch of keys without having to actively maintain the underlying tooling.</description>
+    </item>
+    
+  </channel>
+</rss>

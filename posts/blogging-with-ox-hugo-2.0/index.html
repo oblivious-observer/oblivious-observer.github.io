@@ -1,0 +1,474 @@
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Blogging with orgmode, hugo and nix | oblivious observer</title><meta name=keywords content="NixOS,orgmode,hugo"><meta name=description content="How I yet again decided to set up another iteration of this blog. This time using nix, hugo and of course orgmode..
+Introduction This is my third attempt of setting up an easy to use blogging workflow. The first time I chose to try out use ox-hugo as well as github pages. Initially everything worked, but I quickly stopped writing posts because my initial setup using a single orgmode file with ox-hugo did not match my notetaking workflow, where I basically generate a bunch of random files and some of them get reworked or updated enough for me to think about publishing them."><meta name=author content="oblivious observer"><link rel=canonical href=https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/><link href=/assets/css/stylesheet.min.2fe20f8bc0dfa5e1b6cdbdf2cd0ff90da85d80a5d39aced2f9ff00407eedffde.css integrity="sha256-L+IPi8DfpeG2zb3yzQ/5DahdgKXTms7S+f8AQH7t/94=" rel="preload stylesheet" as=style><link rel=icon href=https://oblivious.observer/observer-16x16.png><link rel=icon type=image/png sizes=16x16 href=https://oblivious.observer/observer-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://oblivious.observer/observer-32x32.png><link rel=apple-touch-icon href=https://oblivious.observer/observer-512x512.png><link rel=mask-icon href=https://oblivious.observer/observer-512x512.png><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><meta name=generator content="Hugo 0.74.3"><meta property="og:title" content="Blogging with orgmode, hugo and nix"><meta property="og:description" content="How I yet again decided to set up another iteration of this blog. This time using nix, hugo and of course orgmode..
+Introduction This is my third attempt of setting up an easy to use blogging workflow. The first time I chose to try out use ox-hugo as well as github pages. Initially everything worked, but I quickly stopped writing posts because my initial setup using a single orgmode file with ox-hugo did not match my notetaking workflow, where I basically generate a bunch of random files and some of them get reworked or updated enough for me to think about publishing them."><meta property="og:type" content="article"><meta property="og:url" content="https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/"><meta property="og:image" content="https://oblivious.observer/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta property="article:published_time" content="2021-03-22T00:00:00+01:00"><meta property="article:modified_time" content="2021-03-22T00:00:00+01:00"><meta property="og:site_name" content="oblivious.observer"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://oblivious.observer/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta name=twitter:title content="Blogging with orgmode, hugo and nix"><meta name=twitter:description content="How I yet again decided to set up another iteration of this blog. This time using nix, hugo and of course orgmode..
+Introduction This is my third attempt of setting up an easy to use blogging workflow. The first time I chose to try out use ox-hugo as well as github pages. Initially everything worked, but I quickly stopped writing posts because my initial setup using a single orgmode file with ox-hugo did not match my notetaking workflow, where I basically generate a bunch of random files and some of them get reworked or updated enough for me to think about publishing them."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":2,"name":"Posts","item":"https://oblivious.observer/posts/"},{"@type":"ListItem","position":3,"name":"Blogging with orgmode, hugo and nix","item":"https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Blogging with orgmode, hugo and nix","name":"Blogging with orgmode, hugo and nix","description":"How I yet again decided to set up another iteration of this blog. This time using nix, hugo and of course orgmode..\nIntroduction This is my third attempt of setting up an easy to …","keywords":["NixOS","orgmode","hugo"],"articleBody":"How I yet again decided to set up another iteration of this blog. This time using nix, hugo and of course orgmode..\nIntroduction This is my third attempt of setting up an easy to use blogging workflow. The first time I chose to try out use ox-hugo as well as github pages. Initially everything worked, but I quickly stopped writing posts because my initial setup using a single orgmode file with ox-hugo did not match my notetaking workflow, where I basically generate a bunch of random files and some of them get reworked or updated enough for me to think about publishing them. Also I wasn’t particularly happy about hugo, especially since I didn’t find a theme that I liked, so in the end I decided to put together my own, which was basically exactly what I had planned on not doing. Ideally I just want to publish my content without having to take care of anything else than the content I produce (apart from the whole theming I also took a short dive into hugos templating, when I tried to include an RSS feed and it simply wasn’t fun).\nKind of fed up with my initial attempt at creating a blog at some point I revisited the idea. This time I only shortly looked at hugo, but kind of had the idea in mind of using only emacs to set up everything. This time I took a closer look at org-publish and decided to build my own little solution, what I came up with was oblivious, a small 100 LoC shell script that in conjunction with emacs and org-mode can - probably among other things - function as a static site generator. Basically org-publish is used to define the way the website looks like, and a bunch of language-agnostic fetchers as well as templating snippets are defined (all using various built-in features of orgmode) and then emacs is executed using the oblivious command loading/tangling the org-file containing all the logic and settings that make up the site. I also included some some hackish lines that “infect” a users emacs config so one can start exporting everything using org-publish. Guess I’m part of the old and venerable society of static site generator generators now - yay!\nThis post describes my current setup in detail, I also link to the shell.nix as well as the config.yml at the end so anyone should be able to set up a similiar site pretty quickly.\nGetting started the nix way Since my little excursion into org-publish I have increasingly worked with NixOS and since totally oblivious to me after a reinstall my static site generator stopped working I started looking for another blogging workflow yet again, this time I revisited the idea of using hugo, but I wanted to do it in a nix way: set up a shell.nix file that generates my hugo environment. There are a bunch of examples on how to write such a nix file:\n kalbas.it computers.lol hugoreeves.com  I started out with an empty directory:\nmkdir blog \u0026\u0026 cd blog After I found myself a theme that seems to be nice and regularly updated, I started out with this shell.nix:\n{ pkgs ? import  {} }: with pkgs; let hugo-theme-papermod = runCommand \"hugo-theme-papermod\" { pinned = builtins.fetchTarball { name = \"hugo-theme-papermod\"; # Store path name url = https://github.com/adityatelange/hugo-PaperMod/archive/master.tar.gz; sha256 = \"03171mbdikjpx7f6m8ga9xgb62a7ars030dwpxv249vxs4zd2lq4\"; # Hash obtained using `nix-prefetch-url --unpack ` }; patches = []; preferLocalBuild = true; } '' cp -r $pinned $out chmod -R u+w $out for p in $patches; do echo \"Applying patch $p\" patch -d $out -p1 done ''; in mkShell { buildInputs = [ hugo ]; shellHook = '' mkdir -p themes ln -snf \"${hugo-theme-papermod}\" themes/hugo-theme-papermod ''; } This fetches the most up to date version of the theme as tarball, then optionally applies patches to that tarball and finally creates an item in the nix-store that contains the most recent patched version of the theme.\nThis is especially interesting because using standard unix patches, it is possible to keep the configuration that is specific to the blog separate from the code of the theme.\nNote that the link inside fetchTarball always points to the most recent version of the theme, so that executing nix-shell will fail due to containing the wrong sha checksum whenever there is an update on the theme repo. In this case the correct checksum can be retrieved like this:\n$ nix-prefetch-url --unpack https://github.com/adityatelange/hugo-PaperMod/archive/master.tar.gz unpacking... [0.2 MiB DL] path is '/nix/store/kr5m0bbs9sj8zvlx3ymm4ffiif3jvkwj-master.tar.gz' 0b8m1n2vn29mmgc9l2jpw9aiqbixh4nihsw0h43b04qwzh22ngaj First create a new hugo site using nix-shell:\n~/blog$ nix-shell -p hugo ~/blog$ hugo new site . ~/blog$ tree . ├── archetypes │ └── default.md ├── config.toml ├── content ├── data ├── layouts ├── shell.nix ├── static └── themes After making sure the checksum in shell.nix is correct and a nix-shell can be opened inside the blog directory in order to set up the themes directory:\n~/blog$ nix-shell unpacking 'https://github.com/adityatelange/hugo-PaperMod/archive/master.tar.gz'... these derivations will be built: /nix/store/jx1ra8dxlhrp3q1imxpl93pn862p9nsb-hugo-theme-papermod.drv building '/nix/store/jx1ra8dxlhrp3q1imxpl93pn862p9nsb-hugo-theme-papermod.drv'... [nix-shell:~/blog]$ tree . ├── archetypes │ └── default.md ├── config.toml ├── content ├── data ├── layouts ├── shell.nix ├── static └── themes └── hugo-theme-papermod - /nix/store/1vmg77dsz9rjwccjw2wqjhp4vpsgh49n-hugo-theme-papermod Now we can start setting up our blog: At this point I added a blog/org directory to house my posts (I hardlink the notes I want to publish from my notes directory here) and blog/patches in order to house the patches that customize the site to my liking.\nIn order to get started, remove the config.toml and instead lets grab the example configuration from the themes wiki page and set it up. At this point I added images to the blog/static folder, cause that is apparently the root location from where they are fetched by the config:\nbaseURL: \"https://oblivious.observer\" title: oblivious observer paginate: 5 theme: hugo-theme-papermod enableRobotsTXT: true buildDrafts: false buildFuture: false buildExpired: false minify: disableXML: true minifyOutput: true params: env: production # to enable google analytics, opengraph, twitter-cards and schema. title: oblivious.observer description: \"a blog\" author: Me # author: [\"Me\", \"You\"] # multiple authors images: [\"\"] defaultTheme: auto # dark, light disableThemeToggle: false ShowReadingTime: true ShowShareButtons: false disableSpecial1stPost: false comments: false hidemeta: false showtoc: false tocopen: false assets: # disableHLJS: true # to disable highlight.js # disableFingerprinting: true favicon: \"/observer.png\" favicon16x16: \"/observer.png\" favicon32x32: \"/observer.png\" apple_touch_icon: \"/observer.png\" safari_pinned_tab: \"/observer.png\" label: text: \"Oblivious Observer\" icon: /observer.png iconHeight: 35 # profile-mode profileMode: enabled: true # needs to be explicitly set title: Oblivious Observer subtitle: \"simply a tech block..\" imageUrl: \"/observer.png\" imageWidth: 120 imageHeight: 120 imageTitle: buttons: - name: Posts url: posts - name: Tags url: tags - name: Search url: search # home-info mode homeInfoParams: Title: \"Hi there\" Content: just a tech block.. socialIcons: - name: github url: \"https://github.com/observer\" - name: rss url: \"/index.xml\" cover: hidden: true # hide everywhere but not in structured data hiddenInList: true # hide on list pages and home hiddenInSingle: true # hide on single page # for search # https://fusejs.io/api/options.html fuseOpts: isCaseSensitive: false shouldSort: true location: 0 distance: 1000 threshold: 0.4 minMatchCharLength: 0 keys: [\"title\", \"permalink\", \"summary\", \"content\"] outputs: home: - HTML - RSS - JSON # is necessary menu: main: # - identifier: categories # name: categories # url: /categories/ # weight: 10 - identifier: search name: search url: /search/ weight: 19 - identifier: tags name: tags url: /tags/ weight: 20 - identifier: rss name: rss url: /index.xml weight: 21 # - identifier: example # name: example.org # url: https://example.org # weight: 30 # Read: https://github.com/adityatelange/hugo-PaperMod/wiki/FAQs#using-hugos-syntax-highlighter-chroma # pygmentsUseClasses: true # markup: # highlight: # # anchorLineNos: true # codeFences: true # guessSyntax: true # lineNos: true # style: monokai Setting up Doom Emacs From now on posts can be generated using ox-hugo. In order to set up ox-hugo on doom emacs, add a few lines to the configuration and use the doom script to install the packages:\n$ cat  ~/.doom.d/packages.el (package! ox-hugo) EOF $ cat  ~/.doom.d/packages.el (use-package! ox-hugo :after ox) EOF $ ~/.emacs.d/bin/doom sync Using ox-hugo from Emacs Then in order to post create a org file in blog/org or link one from somewhere else in there, write something and press C-c C-e H H in order to export a blog post. Only make sure you have set up the minimal necessary tags for ox-hugo, which seems to be #+HUGO_BASE_DIR:\n#+HUGO_BASE_DIR: ~/blog #+hugo_tags: NixOS orgmode hugo #+hugo_custom_front_matter: :ShowToc true Note that the theme specific options, such as ShowToc, can be set using hugo_custom_front_matter.\nPatching / Changing the theme Now at this point the idea would be to patch the theme before it is generated, however there is another option: Hugo allows for Overrides, basically replace any file in the theme directory with another one that can be found under the same path inside your site directory structure and you automatically override that part of the theme.\nAlthough I initially planned to make a bunch of patches which I keep inside of a patch directory, I decided against that for now. Initially I think I’d like to keep everything inside of a single shell.nix file.\nFont Awesome Fingerprint and About Icons Initially I added in an additional icon so I could link to my public key as well as an icon where I can link to a description on how this blog is built. Icons in the Papermod theme are defined by adding in svg code into blog/themes/hugo-theme-papermod/layouts/partials/svg.html. Inside the shellHook this can be done with a single sed statement:\n# add the font awesome fingerprint icon as gpg icon (source: https://fontawesome.com/icons/fingerprint) # also add the address card icon as about icon (source: https://fontawesome.com/icons/address-card) mkdir -p layouts/partials sed '/^{{- else if $icon_name -}}.*/i{{- else if (eq $icon_name \"gpg\") -}}\\n\\\\\\\\\\n{{- else if (eq $icon_name \"about\") -}}\\n\\\\\\\\' themes/hugo-theme-papermod/layouts/partials/svg.html  layouts/partials/svg.html Add comments I’m using utteranc.es as commenting system, which in turn uses the github API to store the comments inside of github issues. Since I’m using github pages anyway, I’m alright with this and prefer it to third party commenting systems.\nIn order to set up utterances a utterances.json has to be generated inside the blog/public folder, also a partial with the utteranc.es setup has to be created:\ncat ~/blog/public/utterances.json { \"origins\": [ \"https://oblivious.observer\", \"https://observer.github.io\" ] } EOF cat ~/blog/layouts/partials/comments.html repo=observer/observer.github.io issue-term=url label=💬 theme=photon-dark crossorigin=anonymous async  EOF Removing the html-footer I knid of like the idea of not having a footer that screams how and using which technology the site is built on every post, so I chose to remove it, there is this post explaining my workflow in detail as well as a short tl;dr I link to in the about page (probably look at the link in the about page, this one will probably be forgotten and outdated in no time). To remove the footer sed can be used:\nsed '/ themes/hugo-theme-papermod/layouts/partials/footer.html  layouts/partials/footer.html Add a CNAME file In order to make sure the site is published under its custom domain, a CNAME file has to be created inside the public directory:\nmkdir -p ~/blog/public cat ~/blog/public/CNAME oblivious.observer EOF Image Magic with imagemagick The Papermod themes config.yml contains a few lines that can be used to set up image files such as the sites favicon in the blog/static directory. Since I basically started out with only a single 16x16 png file, I decided to try setting everything up using the shell.nix.\nInitially I converted the image to text using base64:\nblog/static$ base64 observer.png iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9 kT1Iw0AYht+mikUqCnYQcchQXbQgKuKoVShChVArtOpgcukfNGlIUlwcBdeCgz+LVQcXZ10dXAVB 8AfEydFJ0UVK/C4ptIjxjuMe3vvel7vvAKFeZprVMQ5oum2mEnExk10Vu14RQh/NUYgys4w5SUrC d3zdI8D3uxjP8q/7c/SoOYsBAZF4lhmmTbxBPL1pG5z3iSOsKKvE58RjJl2Q+JHrisdvnAsuCzwz YqZT88QRYrHQxkobs6KpEU8RR1VNp3wh47HKeYuzVq6y5j35C8M5fWWZ67SGkMAiliBBhIIqSijD Rox2nRQLKTqP+/gHXb9ELoVcJTByLKACDbLrB/+D37218pMTXlI4DnS+OM7HMNC1CzRqjvN97DiN EyD4DFzpLX+lDsx8kl5radEjoHcbuLhuacoecLkDDDwZsim7UpCWkM8D72f0TVmg/xboXvP61jzH 6QOQpl4lb4CDQ2CkQNnrPu8Otfft35pm/34AiXxysDj1F4kAAAAGYktHRAD/AP8A/6C9p5MAAAAJ cEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfkCBAQLiQKSqHnAAAAGXRFWHRDb21tZW50AENyZWF0 ZWQgd2l0aCBHSU1QV4EOFwAAAiRJREFUOMulk7FO40AQhj/HS7wGOQYSB6KIiCJFGioKLKFDouYx eCiKE+/ASyCBeAOEIlEQhDf2OSRKNo7XvgJiHXdX3f3NjGa0M//M/GuFYVgaYwAoigJjDGVZUhQF AIvFgr29PYwxGGPQWpNlGb7vk+c5AuDk5IQkSXAch9FoxPb2Nt1uF4DHx0eCIMC2bYwxzOdzkiRh Z2eHp6cnapPJhNFoRK/XYzab0e12CcOQg4MDpJR0Oh3SNOXw8JBer4eUkuPjY7IsoygKrKOjo1JK +U8jTKdTxKbjMFaqKlCr1bAsC2MMUkpMlhG9vlYxYduUQBrHdPb3EX6jwYYQCCEAKgswXywA2HRd 8jwnW60A2BCCra0tsiz7WOK383P6/T7NZhOAOI4B2N3dBaDdbgMQRRHtdpsoigD4fnWFWC6XjMdj xuMxv+Pi4oI4jkmSpIqt/clkgmVZHwxarRb9fv+PAmsmd3d3/A0/0hRhWRZBEDAYDDg9PQXg+vqa ZrNZFQjDEIDLy0sAbm5uGA6HvDw/U4MSpRTq8xIAg8Gg8td7+RVBEKCUYrlcIlarnHq9jtaa29tb AJRSVfe1Bar8cDjEGPMh5XQ2A0BKWbHQWn+Z/ezsDM/zUEqhtcbzPFzX5eXtDeE4DovPewOUZYnj OF/0YNs20+kUAM/z0Frz/v5OWZaIer2O67rc399XD9YMWq0WAA8PD1VuLftGo4Hv+1j/+51/Agiw QFrcT1GrAAAAAElFTkSuQmCC Then in shell.nix define a string:\n... observer-16x16 = '' iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9 kT1Iw0AYht+mikUqCnYQcchQXbQgKuKoVShChVArtOpgcukfNGlIUlwcBdeCgz+LVQcXZ10dXAVB 8AfEydFJ0UVK/C4ptIjxjuMe3vvel7vvAKFeZprVMQ5oum2mEnExk10Vu14RQh/NUYgys4w5SUrC d3zdI8D3uxjP8q/7c/SoOYsBAZF4lhmmTbxBPL1pG5z3iSOsKKvE58RjJl2Q+JHrisdvnAsuCzwz YqZT88QRYrHQxkobs6KpEU8RR1VNp3wh47HKeYuzVq6y5j35C8M5fWWZ67SGkMAiliBBhIIqSijD Rox2nRQLKTqP+/gHXb9ELoVcJTByLKACDbLrB/+D37218pMTXlI4DnS+OM7HMNC1CzRqjvN97DiN EyD4DFzpLX+lDsx8kl5radEjoHcbuLhuacoecLkDDDwZsim7UpCWkM8D72f0TVmg/xboXvP61jzH 6QOQpl4lb4CDQ2CkQNnrPu8Otfft35pm/34AiXxysDj1F4kAAAAGYktHRAD/AP8A/6C9p5MAAAAJ cEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfkCBAQLiQKSqHnAAAAGXRFWHRDb21tZW50AENyZWF0 ZWQgd2l0aCBHSU1QV4EOFwAAAiRJREFUOMulk7FO40AQhj/HS7wGOQYSB6KIiCJFGioKLKFDouYx eCiKE+/ASyCBeAOEIlEQhDf2OSRKNo7XvgJiHXdX3f3NjGa0M//M/GuFYVgaYwAoigJjDGVZUhQF AIvFgr29PYwxGGPQWpNlGb7vk+c5AuDk5IQkSXAch9FoxPb2Nt1uF4DHx0eCIMC2bYwxzOdzkiRh Z2eHp6cnapPJhNFoRK/XYzab0e12CcOQg4MDpJR0Oh3SNOXw8JBer4eUkuPjY7IsoygKrKOjo1JK +U8jTKdTxKbjMFaqKlCr1bAsC2MMUkpMlhG9vlYxYduUQBrHdPb3EX6jwYYQCCEAKgswXywA2HRd 8jwnW60A2BCCra0tsiz7WOK383P6/T7NZhOAOI4B2N3dBaDdbgMQRRHtdpsoigD4fnWFWC6XjMdj xuMxv+Pi4oI4jkmSpIqt/clkgmVZHwxarRb9fv+PAmsmd3d3/A0/0hRhWRZBEDAYDDg9PQXg+vqa ZrNZFQjDEIDLy0sAbm5uGA6HvDw/U4MSpRTq8xIAg8Gg8td7+RVBEKCUYrlcIlarnHq9jtaa29tb AJRSVfe1Bar8cDjEGPMh5XQ2A0BKWbHQWn+Z/ezsDM/zUEqhtcbzPFzX5eXtDeE4DovPewOUZYnj OF/0YNs20+kUAM/z0Frz/v5OWZaIer2O67rc399XD9YMWq0WAA8PD1VuLftGo4Hv+1j/+51/Agiw QFrcT1GrAAAAAElFTkSuQmCC ''; ... Then add imagemagick to the buildInputs and finally add some lines in order to make sure create a bunch of upscaled images using imagesmagicks point filter:\n... buildInputs = [ hugo imagemagick ]; ... mkdir -p static for size in 16x16 32x32 64x64 128x128 256x256 512x512; do echo '${observer-16x16}' | base64 -d | convert- -filter point -resize $size static/observer-$size.png done ... I’m pretty sure this is not exactly how to do it the nix way, since we kind of circumvent the nix store, but I still need learn the language.\nFinally set up the new filenames in the config:\nassets: favicon: \"/observer-16x16.png\" favicon16x16: \"/observer-16x16.png\" favicon32x32: \"/observer-32x32.png\" apple_touch_icon: \"/observer-512x512.png\" safari_pinned_tab: \"/observer-512x512.png\" label: text: \" \" icon: /observer-64x64.png iconHeight: 35 # profile-mode profileMode: ... imageUrl: \"/observer-512x512.png\" ... Release Process using gpg The last time I set up a blog I started signing the files inside the public directory using gpg. Let’s add something similiar to the shellHook in shell.nix:\n... # let's define an alias to release the blog content. However since # bash aliases do not support parameters, lets use a function instead release() { if [ \"$1\" == \"the\" ] \u0026\u0026 [ \"$2\" == \"kraken\" ]; then cd ~/blog for f in $(find -L public/ | grep '.sig$'); do rm $f done hugo for f in $(find -L public/ | grep -v \".git\"); do if ! [ -d \"$f\" ]; then gpg -u 48A1CC122B2B6E37FDA4B7B474344F2BCE39AA5D --output $f.sig --detach-sig $f fi done cd - else echo ' ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▄▄███░░░░░ ░░▄▄░░░░░░░░░░░░░░░░░░░░░░░░░███████░░░░ ░░███▄░░░░░░░░░░░░░░░░░░░░░▄█████▀░█░░░░ ░░▀█████▄▄▄▄▀▀▀▀▀▀▀▀░▄▄▄▄▄███▀▀░▀███░░░░ ░░░░███▀▀░░░░░░░░░░░░░░▀▀▀███░░░░██▀░░░░ ░░░░██░░░░░░▄░░░░░░░░░░░░░░░▀▀▄▄███░░░░░ ░░░░▄█▄▄████▀█░█▄██▄▄░░░░░░░░░████▀░░░░░ ░░░▄████████░░░██████▄▄▄▄░░░░░████░░░░░░ ░░░███░█░▀██░░░▀███░█░░███▄▄░░░░▀█░░░░░░ ░░░████▄███▄▄░░░███▄▄▄█████▀░░░░░██░░░░░ ░░▄████▀▀░▀██▀░░░▀█████████░░░░░░██░░░░░ ░░▀███░░░▄▄▀▀▀▄▄░░░░▀██████░░░░░░░█░░░░░ ░░░███░░█░░░░░░░▀░░░░▀███▀░░░░░░░░█░░░░░ ░░░████▄▀░░░░░░░░▀░░░████▄░░░░░░░░░█░░░░ ░░░██████▄░░░░░░░░░▀▀████▀░░░░░░░░░█░░░░ ░░▄█████████▀▀▀▀░░░░░░░░░░░░░░░░░░░▀█░░░ ░░███████████▄▄▄▄░░░░░░░░░░░░░░░░░░░█▄░░ ░░████████▀▀▀▀▀▀░░░░░░░░░░░░░░░░░░░░░█▄░ ░░████████▄▄░░░░░░░░░░░░░░░░░░░░░░░░░░█░ ░▄███████▄▄░░░░░░░░░░░░░░░░░░░░░░░░░░░░█ ░▀▀▀▀▀▀▀▀▀█▀▀▀░░░░░░░░░░░░░░░░░░░░░░░░░█ NOPE.. use them correct words human.. ' fi } ... Perfect! Finally I’ve found a use for the phrase release the kraken. After executing the release function, I still have to add the files inside blog/public to the git repository and push them.\nPushing all the things In order to publish my posts, I defined another little function inside the shellHook, which generates a git commit of the blog/public repo (which contains the github pages link) and pushes everything using an ssh-key that I keep inside my password store:\n... publish() { if [ \"$1\" == \"all\" ] \u0026\u0026 [ \"$2\" == \"the\" ] \u0026\u0026 [ \"$2\" == \"things\" ]; then cd ~/blog/public git add . git commit -m \"$(date '+%s' | perl -lpe '$_=join \" \", unpack\"(B8)*\"')\" ssh-agent bash -c 'ssh-add - cd - else echo ' ... the same grumpy art as above ... NOPE.. use them correct words human.. ' fi } ... shell.nix and config.yml If by any chance someone here stumbles over this post, here are the shell.nix as well as the config.yml I’m currently using, you should be able to get up and running from using these files as well as this blog post pretty easy. In case you do, feel free to drop me a line :)\n","wordCount":"2747","inLanguage":"en","datePublished":"2021-03-22T00:00:00+01:00","dateModified":"2021-03-22T00:00:00+01:00","author":[{"@type":"Person","name":"oblivious observer"}],"mainEntityOfPage":{"@type":"WebPage","@id":"https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/"},"publisher":{"@type":"Organization","name":"oblivious observer","logo":{"@type":"ImageObject","url":"https://oblivious.observer/observer-16x16.png"}}}</script></head><body id=top><script>if(localStorage.getItem("pref-theme")==="dark"){document.body.classList.add('dark');}else if(localStorage.getItem("pref-theme")==="light"){document.body.classList.remove('dark')}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.body.classList.add('dark');}</script><noscript><style type=text/css>#theme-toggle,.top-link{display:none}@media(prefers-color-scheme:dark){:root{--theme: #1d1e20;--entry: #2e2e33;--primary: rgba(255, 255, 255, 0.84);--secondary: rgba(255, 255, 255, 0.56);--tertiary: rgba(255, 255, 255, 0.16);--content: rgba(255, 255, 255, 0.74);--hljs-bg: #2e2e33;--code-bg: #37383e;--border: #333}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><header class=header><nav class=nav><div class=logo><a href=https://oblivious.observer accesskey=h title="(Alt + H)"><img src=/observer-64x64.png alt=logo aria-label=logo height=35></a>
+<span class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></span></div><ul id=menu onscroll=menu_on_scroll()><li><a href=https://oblivious.observer/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li><li><a href=https://oblivious.observer/posts/ title=posts><span>posts</span></a></li><li><a href=https://oblivious.observer/archives/ title=archive><span>archive</span></a></li><li><a href=https://oblivious.observer/tags/ title=tags><span>tags</span></a></li><li><a href=https://oblivious.observer/index.html title=about><span>about</span></a></li><li><a href=https://oblivious.observer/index.xml title=rss><span>rss</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><h1 class=post-title>Blogging with orgmode, hugo and nix</h1><div class=post-meta>March 22, 2021&nbsp;·&nbsp;13 min&nbsp;·&nbsp;oblivious observer</div></header><div class=toc><details><summary accesskey=c title="(Alt + C)"><div class=details>Table of Contents</div></summary><div class=inner><ul><li><a href=#introduction aria-label=Introduction>Introduction</a></li><li><a href=#getting-started-the-nix-way aria-label="Getting started the nix way">Getting started the nix way</a></li><li><a href=#setting-up-doom-emacs aria-label="Setting up Doom Emacs">Setting up Doom Emacs</a></li><li><a href=#using-ox-hugo-from-emacs aria-label="Using ox-hugo from Emacs">Using <code>ox-hugo</code> from Emacs</a></li><li><a href=#patching-changing-the-theme aria-label="Patching / Changing the theme">Patching / Changing the theme</a><ul><li><a href=#font-awesome-fingerprint-and-about-icons aria-label="Font Awesome Fingerprint and About Icons">Font Awesome Fingerprint and About Icons</a></li><li><a href=#add-comments aria-label="Add comments">Add comments</a></li><li><a href=#removing-the-html-footer aria-label="Removing the html-footer">Removing the html-footer</a></li></ul></li><li><a href=#add-a-cname-file aria-label="Add a CNAME file">Add a CNAME file</a></li><li><a href=#image-magic-with-imagemagick aria-label="Image Magic with imagemagick">Image Magic with <code>imagemagick</code></a></li><li><a href=#release-process-using-gpg aria-label="Release Process using gpg">Release Process using <code>gpg</code></a></li><li><a href=#pushing-all-the-things aria-label="Pushing all the things">Pushing all the things</a></li><li><a href=#shell-dot-nix-and-config-dot-yml aria-label="shell.nix and config.yml"><code>shell.nix</code> and <code>config.yml</code></a></li></ul></div></details></div><div class=post-content><p>How I yet again decided to set up another iteration of this blog. This time
+using nix, hugo and of course orgmode..</p><h2 id=introduction>Introduction<a hidden class=anchor aria-hidden=true href=#introduction>#</a></h2><p>This is my third attempt of setting up an easy to use blogging workflow. The
+first time I chose to try out use ox-hugo as well as github pages. Initially
+everything worked, but I quickly stopped writing posts because my initial setup
+using a single orgmode file with <code>ox-hugo</code> did not match my notetaking workflow,
+where I basically generate a bunch of random files and some of them get reworked
+or updated enough for me to think about publishing them. Also I wasn&rsquo;t
+particularly happy about hugo, especially since I didn&rsquo;t find a theme that I
+liked, so in the end I decided to put together my own, which was basically
+exactly what I had planned on not doing. Ideally I just want to publish my
+content without having to take care of anything else than the content I produce
+(apart from the whole theming I also took a short dive into hugos templating,
+when I tried to include an RSS feed and it simply wasn&rsquo;t fun).</p><p>Kind of fed up with my initial attempt at creating a blog at some point I
+revisited the idea. This time I only shortly looked at hugo, but kind of had the
+idea in mind of using only emacs to set up everything. This time I took a closer
+look at <code>org-publish</code> and decided to build my own little solution, what I came
+up with was <a href=https://github.com/observer/oblivious>oblivious</a>, a small 100 LoC shell script that in conjunction with
+emacs and org-mode can - probably among other things - function as a static site
+generator. Basically <code>org-publish</code> is used to define the way the website looks
+like, and a bunch of language-agnostic fetchers as well as templating snippets
+are defined (all using various built-in features of <code>orgmode</code>) and then emacs is
+executed using the <code>oblivious</code> command loading/tangling the org-file containing
+all the logic and settings that make up the site. I also included some some
+hackish lines that &ldquo;infect&rdquo; a users emacs config so one can start exporting
+everything using org-publish. Guess I&rsquo;m part of the old and venerable society of
+static site generator generators now - yay!</p><p>This post describes my current setup in detail, I also link to the <code>shell.nix</code>
+as well as the <code>config.yml</code> at the end so anyone should be able to set up a
+similiar site pretty quickly.</p><h2 id=getting-started-the-nix-way>Getting started the nix way<a hidden class=anchor aria-hidden=true href=#getting-started-the-nix-way>#</a></h2><p>Since my little excursion into <code>org-publish</code> I have increasingly worked with
+NixOS and since totally oblivious to me after a reinstall my static site
+generator stopped working I started looking for another blogging workflow yet
+again, this time I revisited the idea of using hugo, but I wanted to do it in a
+nix way: set up a <code>shell.nix</code> file that generates my hugo environment. There are
+a bunch of examples on how to write such a nix file:</p><ul><li><a href=https://kalbas.it/2019/02/26/manage-a-static-website-with-hugo-and-nix/>kalbas.it</a></li><li><a href=https://computers.lol/posts/2020-12-30-blog-with-nix-hugo-gitlab/>computers.lol</a></li><li><a href=https://hugoreeves.com/posts/2019/continuously-delivering-this-blog-with-nix-hugo-and-circleci/>hugoreeves.com</a></li></ul><p>I started out with an empty directory:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>mkdir blog <span style=color:#f92672>&amp;&amp;</span> cd blog
+</code></pre></div><p>After I found myself a theme that seems to be nice and regularly updated, I
+started out with this <code>shell.nix</code>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{ pkgs <span style=color:#f92672>?</span> <span style=color:#f92672>import</span> <span style=color:#e6db74>&lt;nixpkgs&gt;</span> {} }:
+
+<span style=color:#66d9ef>with</span> pkgs;
+
+<span style=color:#66d9ef>let</span>
+
+  hugo-theme-papermod <span style=color:#f92672>=</span> runCommand <span style=color:#e6db74>&#34;hugo-theme-papermod&#34;</span> {
+    pinned <span style=color:#f92672>=</span> builtins<span style=color:#f92672>.</span>fetchTarball {
+      name <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;hugo-theme-papermod&#34;</span>; <span style=color:#75715e># Store path name</span>
+      url <span style=color:#f92672>=</span> <span style=color:#e6db74>https://github.com/adityatelange/hugo-PaperMod/archive/master.tar.gz</span>;
+      sha256 <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;03171mbdikjpx7f6m8ga9xgb62a7ars030dwpxv249vxs4zd2lq4&#34;</span>; <span style=color:#75715e># Hash obtained using `nix-prefetch-url --unpack &lt;url&gt;`</span>
+    };
+    patches <span style=color:#f92672>=</span> [];
+
+    preferLocalBuild <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span>;
+  }
+  <span style=color:#e6db74>&#39;&#39;
+</span><span style=color:#e6db74>    cp -r $pinned $out
+</span><span style=color:#e6db74>    chmod -R u+w $out
+</span><span style=color:#e6db74>
+</span><span style=color:#e6db74>    for p in $patches; do
+</span><span style=color:#e6db74>      echo &#34;Applying patch $p&#34;
+</span><span style=color:#e6db74>      patch -d $out -p1 &lt; &#34;$p&#34;
+</span><span style=color:#e6db74>    done
+</span><span style=color:#e6db74>  &#39;&#39;</span>;
+<span style=color:#66d9ef>in</span>
+
+  mkShell {
+    buildInputs <span style=color:#f92672>=</span> [
+      hugo
+    ];
+
+  shellHook <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;&#39;
+</span><span style=color:#e6db74>    mkdir -p themes
+</span><span style=color:#e6db74>    ln -snf &#34;</span><span style=color:#e6db74>${</span>hugo-theme-papermod<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34; themes/hugo-theme-papermod
+</span><span style=color:#e6db74>  &#39;&#39;</span>;
+  }
+</code></pre></div><p>This fetches the most up to date version of the theme as tarball, then
+optionally applies patches to that tarball and finally creates an item in the
+nix-store that contains the most recent patched version of the theme.</p><p>This is especially interesting because using standard unix patches, it is
+possible to keep the configuration that is specific to the blog separate from
+the code of the theme.</p><p>Note that the link inside <code>fetchTarball</code> always points to the most recent
+version of the theme, so that executing <code>nix-shell</code> will fail due to containing
+the wrong sha checksum whenever there is an update on the theme repo. In this
+case the correct checksum can be retrieved like this:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ nix-prefetch-url --unpack https://github.com/adityatelange/hugo-PaperMod/archive/master.tar.gz
+unpacking...
+<span style=color:#f92672>[</span>0.2 MiB DL<span style=color:#f92672>]</span>
+path is <span style=color:#e6db74>&#39;/nix/store/kr5m0bbs9sj8zvlx3ymm4ffiif3jvkwj-master.tar.gz&#39;</span>
+0b8m1n2vn29mmgc9l2jpw9aiqbixh4nihsw0h43b04qwzh22ngaj
+</code></pre></div><p>First create a new hugo site using nix-shell:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>~/blog$ nix-shell -p hugo
+~/blog$ hugo new site .
+~/blog$ tree
+.
+├── archetypes
+│   └── default.md
+├── config.toml
+├── content
+├── data
+├── layouts
+├── shell.nix
+├── static
+└── themes
+</code></pre></div><p>After making sure the checksum in <code>shell.nix</code> is correct and a <code>nix-shell</code> can
+be opened inside the <code>blog</code> directory in order to set up the themes directory:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>~/blog$ nix-shell
+unpacking <span style=color:#e6db74>&#39;https://github.com/adityatelange/hugo-PaperMod/archive/master.tar.gz&#39;</span>...
+these derivations will be built:
+  /nix/store/jx1ra8dxlhrp3q1imxpl93pn862p9nsb-hugo-theme-papermod.drv
+building <span style=color:#e6db74>&#39;/nix/store/jx1ra8dxlhrp3q1imxpl93pn862p9nsb-hugo-theme-papermod.drv&#39;</span>...
+<span style=color:#f92672>[</span>nix-shell:~/blog<span style=color:#f92672>]</span>$ tree
+.
+├── archetypes
+│   └── default.md
+├── config.toml
+├── content
+├── data
+├── layouts
+├── shell.nix
+├── static
+└── themes
+    └── hugo-theme-papermod -&gt; /nix/store/1vmg77dsz9rjwccjw2wqjhp4vpsgh49n-hugo-theme-papermod
+</code></pre></div><p>Now we can start setting up our blog: At this point I added a <code>blog/org</code>
+directory to house my posts (I hardlink the notes I want to publish from my
+notes directory here) and <code>blog/patches</code> in order to house the patches that
+customize the site to my liking.</p><p>In order to get started, remove the <code>config.toml</code> and instead lets grab the
+example configuration from the themes wiki page and set it up. At this point I
+added images to the <code>blog/static</code> folder, cause that is apparently the root
+location from where they are fetched by the config:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#66d9ef>baseURL</span>: <span style=color:#e6db74>&#34;https://oblivious.observer&#34;</span>
+<span style=color:#66d9ef>title</span>: oblivious observer
+<span style=color:#66d9ef>paginate</span>: <span style=color:#ae81ff>5</span>
+<span style=color:#66d9ef>theme</span>: hugo-theme-papermod
+
+<span style=color:#66d9ef>enableRobotsTXT</span>: <span style=color:#66d9ef>true</span>
+<span style=color:#66d9ef>buildDrafts</span>: <span style=color:#66d9ef>false</span>
+<span style=color:#66d9ef>buildFuture</span>: <span style=color:#66d9ef>false</span>
+<span style=color:#66d9ef>buildExpired</span>: <span style=color:#66d9ef>false</span>
+
+<span style=color:#66d9ef>minify</span>:
+    <span style=color:#66d9ef>disableXML</span>: <span style=color:#66d9ef>true</span>
+    <span style=color:#66d9ef>minifyOutput</span>: <span style=color:#66d9ef>true</span>
+
+<span style=color:#66d9ef>params</span>:
+    <span style=color:#66d9ef>env</span>: production <span style=color:#75715e># to enable google analytics, opengraph, twitter-cards and schema.</span>
+    <span style=color:#66d9ef>title</span>: oblivious.observer
+    <span style=color:#66d9ef>description</span>: <span style=color:#e6db74>&#34;a blog&#34;</span>
+    <span style=color:#66d9ef>author</span>: Me
+    <span style=color:#75715e># author: [&#34;Me&#34;, &#34;You&#34;] # multiple authors</span>
+    <span style=color:#66d9ef>images</span>: [<span style=color:#e6db74>&#34;&lt;link or path of image for opengraph, twitter-cards&gt;&#34;</span>]
+
+    <span style=color:#66d9ef>defaultTheme</span>: auto <span style=color:#75715e># dark, light</span>
+    <span style=color:#66d9ef>disableThemeToggle</span>: <span style=color:#66d9ef>false</span>
+
+    <span style=color:#66d9ef>ShowReadingTime</span>: <span style=color:#66d9ef>true</span>
+    <span style=color:#66d9ef>ShowShareButtons</span>: <span style=color:#66d9ef>false</span>
+    <span style=color:#66d9ef>disableSpecial1stPost</span>: <span style=color:#66d9ef>false</span>
+    <span style=color:#66d9ef>comments</span>: <span style=color:#66d9ef>false</span>
+    <span style=color:#66d9ef>hidemeta</span>: <span style=color:#66d9ef>false</span>
+    <span style=color:#66d9ef>showtoc</span>: <span style=color:#66d9ef>false</span>
+    <span style=color:#66d9ef>tocopen</span>: <span style=color:#66d9ef>false</span>
+
+    <span style=color:#66d9ef>assets</span>:
+        <span style=color:#75715e># disableHLJS: true # to disable highlight.js</span>
+        <span style=color:#75715e># disableFingerprinting: true</span>
+        <span style=color:#66d9ef>favicon</span>: <span style=color:#e6db74>&#34;/observer.png&#34;</span>
+        <span style=color:#66d9ef>favicon16x16</span>: <span style=color:#e6db74>&#34;/observer.png&#34;</span>
+        <span style=color:#66d9ef>favicon32x32</span>: <span style=color:#e6db74>&#34;/observer.png&#34;</span>
+        <span style=color:#66d9ef>apple_touch_icon</span>: <span style=color:#e6db74>&#34;/observer.png&#34;</span>
+        <span style=color:#66d9ef>safari_pinned_tab</span>: <span style=color:#e6db74>&#34;/observer.png&#34;</span>
+
+    <span style=color:#66d9ef>label</span>:
+        <span style=color:#66d9ef>text</span>: <span style=color:#e6db74>&#34;Oblivious Observer&#34;</span>
+        <span style=color:#66d9ef>icon</span>:  /observer.png
+        <span style=color:#66d9ef>iconHeight</span>: <span style=color:#ae81ff>35</span>
+
+    <span style=color:#75715e># profile-mode</span>
+    <span style=color:#66d9ef>profileMode</span>:
+        <span style=color:#66d9ef>enabled</span>: <span style=color:#66d9ef>true</span> <span style=color:#75715e># needs to be explicitly set</span>
+        <span style=color:#66d9ef>title</span>: Oblivious Observer
+        <span style=color:#66d9ef>subtitle</span>: <span style=color:#e6db74>&#34;simply a tech block..&#34;</span>
+        <span style=color:#66d9ef>imageUrl</span>: <span style=color:#e6db74>&#34;/observer.png&#34;</span>
+        <span style=color:#66d9ef>imageWidth</span>: <span style=color:#ae81ff>120</span>
+        <span style=color:#66d9ef>imageHeight</span>: <span style=color:#ae81ff>120</span>
+        <span style=color:#66d9ef>imageTitle</span>:
+        <span style=color:#66d9ef>buttons</span>:
+            - <span style=color:#66d9ef>name</span>: Posts
+              <span style=color:#66d9ef>url</span>: posts
+            - <span style=color:#66d9ef>name</span>: Tags
+              <span style=color:#66d9ef>url</span>: tags
+            - <span style=color:#66d9ef>name</span>: Search
+              <span style=color:#66d9ef>url</span>: search
+
+    <span style=color:#75715e># home-info mode</span>
+    <span style=color:#66d9ef>homeInfoParams</span>:
+        <span style=color:#66d9ef>Title</span>: <span style=color:#e6db74>&#34;Hi there&#34;</span>
+        <span style=color:#66d9ef>Content</span>: just a tech block..
+
+    <span style=color:#66d9ef>socialIcons</span>:
+        - <span style=color:#66d9ef>name</span>: github
+          <span style=color:#66d9ef>url</span>: <span style=color:#e6db74>&#34;https://github.com/observer&#34;</span>
+        - <span style=color:#66d9ef>name</span>: rss
+          <span style=color:#66d9ef>url</span>: <span style=color:#e6db74>&#34;/index.xml&#34;</span>
+
+    <span style=color:#66d9ef>cover</span>:
+        <span style=color:#66d9ef>hidden</span>: <span style=color:#66d9ef>true</span> <span style=color:#75715e># hide everywhere but not in structured data</span>
+        <span style=color:#66d9ef>hiddenInList</span>: <span style=color:#66d9ef>true</span> <span style=color:#75715e># hide on list pages and home</span>
+        <span style=color:#66d9ef>hiddenInSingle</span>: <span style=color:#66d9ef>true</span> <span style=color:#75715e># hide on single page</span>
+
+    <span style=color:#75715e># for search</span>
+    <span style=color:#75715e># https://fusejs.io/api/options.html</span>
+    <span style=color:#66d9ef>fuseOpts</span>:
+        <span style=color:#66d9ef>isCaseSensitive</span>: <span style=color:#66d9ef>false</span>
+        <span style=color:#66d9ef>shouldSort</span>: <span style=color:#66d9ef>true</span>
+        <span style=color:#66d9ef>location</span>: <span style=color:#ae81ff>0</span>
+        <span style=color:#66d9ef>distance</span>: <span style=color:#ae81ff>1000</span>
+        <span style=color:#66d9ef>threshold</span>: <span style=color:#ae81ff>0.4</span>
+        <span style=color:#66d9ef>minMatchCharLength</span>: <span style=color:#ae81ff>0</span>
+        <span style=color:#66d9ef>keys</span>: [<span style=color:#e6db74>&#34;title&#34;</span>, <span style=color:#e6db74>&#34;permalink&#34;</span>, <span style=color:#e6db74>&#34;summary&#34;</span>, <span style=color:#e6db74>&#34;content&#34;</span>]
+
+<span style=color:#66d9ef>outputs</span>:
+    <span style=color:#66d9ef>home</span>:
+        - HTML
+        - RSS
+        - JSON <span style=color:#75715e># is necessary</span>
+
+
+<span style=color:#66d9ef>menu</span>:
+    <span style=color:#66d9ef>main</span>:
+            <span style=color:#75715e>#        - identifier: categories</span>
+            <span style=color:#75715e>#          name: categories</span>
+            <span style=color:#75715e>#          url: /categories/</span>
+            <span style=color:#75715e>#          weight: 10</span>
+        - <span style=color:#66d9ef>identifier</span>: search
+          <span style=color:#66d9ef>name</span>: search
+          <span style=color:#66d9ef>url</span>: /search/
+          <span style=color:#66d9ef>weight</span>: <span style=color:#ae81ff>19</span>
+        - <span style=color:#66d9ef>identifier</span>: tags
+          <span style=color:#66d9ef>name</span>: tags
+          <span style=color:#66d9ef>url</span>: /tags/
+          <span style=color:#66d9ef>weight</span>: <span style=color:#ae81ff>20</span>
+        - <span style=color:#66d9ef>identifier</span>: rss
+          <span style=color:#66d9ef>name</span>: rss
+          <span style=color:#66d9ef>url</span>: /index.xml
+          <span style=color:#66d9ef>weight</span>: <span style=color:#ae81ff>21</span>
+          <span style=color:#75715e>#        - identifier: example</span>
+          <span style=color:#75715e>#          name: example.org</span>
+          <span style=color:#75715e>#          url: https://example.org</span>
+          <span style=color:#75715e>#          weight: 30</span>
+
+<span style=color:#75715e># Read: https://github.com/adityatelange/hugo-PaperMod/wiki/FAQs#using-hugos-syntax-highlighter-chroma</span>
+<span style=color:#75715e># pygmentsUseClasses: true</span>
+<span style=color:#75715e># markup:</span>
+<span style=color:#75715e>#     highlight:</span>
+<span style=color:#75715e>#         # anchorLineNos: true</span>
+<span style=color:#75715e>#         codeFences: true</span>
+<span style=color:#75715e>#         guessSyntax: true</span>
+<span style=color:#75715e>#         lineNos: true</span>
+<span style=color:#75715e>#         style: monokai</span>
+</code></pre></div><h2 id=setting-up-doom-emacs>Setting up Doom Emacs<a hidden class=anchor aria-hidden=true href=#setting-up-doom-emacs>#</a></h2><p>From now on posts can be generated using <code>ox-hugo</code>. In order to set up <code>ox-hugo</code>
+on doom emacs, add a few lines to the configuration and use the <code>doom</code> script to
+install the packages:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ cat <span style=color:#e6db74>&lt;&lt; EOF &gt;&gt; ~/.doom.d/packages.el
+</span><span style=color:#e6db74>(package! ox-hugo)
+</span><span style=color:#e6db74>EOF</span>
+$ cat <span style=color:#e6db74>&lt;&lt; EOF &gt;&gt; ~/.doom.d/packages.el
+</span><span style=color:#e6db74>(use-package! ox-hugo
+</span><span style=color:#e6db74>  :after ox)
+</span><span style=color:#e6db74>EOF</span>
+$ ~/.emacs.d/bin/doom sync
+</code></pre></div><h2 id=using-ox-hugo-from-emacs>Using <code>ox-hugo</code> from Emacs<a hidden class=anchor aria-hidden=true href=#using-ox-hugo-from-emacs>#</a></h2><p>Then in order to post create a org file in <code>blog/org</code> or link one from somewhere
+else in there, write something and press <code>C-c C-e H H</code> in order to export a blog
+post. Only make sure you have set up the minimal necessary tags for ox-hugo,
+which seems to be <code>#+HUGO_BASE_DIR</code>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-org data-lang=org><span style=color:#75715e>#+HUGO_BASE_DIR</span><span style=color:#75715e>: ~/blog</span>
+<span style=color:#75715e>#+hugo_tags</span><span style=color:#75715e>: NixOS orgmode hugo</span>
+<span style=color:#75715e>#+hugo_custom_front_matter</span><span style=color:#75715e>: :ShowToc true</span>
+</code></pre></div><p>Note that the theme specific options, such as <code>ShowToc</code>, can be set using
+<code>hugo_custom_front_matter</code>.</p><h2 id=patching-changing-the-theme>Patching / Changing the theme<a hidden class=anchor aria-hidden=true href=#patching-changing-the-theme>#</a></h2><p>Now at this point the idea would be to patch the theme before it is generated,
+however there is another option: Hugo allows for Overrides, basically replace
+any file in the theme directory with another one that can be found under the
+same path inside your site directory structure and you automatically override
+that part of the theme.</p><p>Although I initially planned to make a bunch of patches which I keep inside of a
+patch directory, I decided against that for now. Initially I think I&rsquo;d like to
+keep everything inside of a single <code>shell.nix</code> file.</p><h3 id=font-awesome-fingerprint-and-about-icons>Font Awesome Fingerprint and About Icons<a hidden class=anchor aria-hidden=true href=#font-awesome-fingerprint-and-about-icons>#</a></h3><p>Initially I added in an additional icon so I could link to my public key as well
+as an icon where I can link to a description on how this blog is built. Icons in
+the Papermod theme are defined by adding in svg code into
+<code>blog/themes/hugo-theme-papermod/layouts/partials/svg.html</code>. Inside the
+<code>shellHook</code> this can be done with a single <code>sed</code> statement:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#75715e># add the font awesome fingerprint icon as gpg icon (source: https://fontawesome.com/icons/fingerprint)</span>
+<span style=color:#75715e># also add the address card icon as about icon      (source: https://fontawesome.com/icons/address-card)</span>
+mkdir -p layouts/partials
+
+sed <span style=color:#e6db74>&#39;/^{{- else if $icon_name -}}.*/i{{- else if (eq $icon_name &#34;gpg&#34;) -}}\n\&lt;svg aria-hidden\=\&#34;true\&#34; focusable\=\&#34;false\&#34; data-prefix\=\&#34;fas\&#34; data-icon\=\&#34;fingerprint\&#34; class\=\&#34;svg-inline--fa fa-fingerprint fa-w-16\&#34; role\=\&#34;img\&#34; xmlns\=\&#34;http:\/\/www.w3.org\/2000\/svg\&#34; viewBox\=\&#34;0 0 512 512\&#34;\&gt;\&lt;path fill\=\&#34;currentColor\&#34; d\=\&#34;M256.12 245.96c-13.25 0-24 10.74-24 24 1.14 72.25-8.14 141.9-27.7 211.55-2.73 9.72 2.15 30.49 23.12 30.49 10.48 0 20.11-6.92 23.09-17.52 13.53-47.91 31.04-125.41 29.48-224.52.01-13.25-10.73-24-23.99-24zm-.86-81.73C194 164.16 151.25 211.3 152.1 265.32c.75 47.94-3.75 95.91-13.37 142.55-2.69 12.98 5.67 25.69 18.64 28.36 13.05 2.67 25.67-5.66 28.36-18.64 10.34-50.09 15.17-101.58 14.37-153.02-.41-25.95 19.92-52.49 54.45-52.34 31.31.47 57.15 25.34 57.62 55.47.77 48.05-2.81 96.33-10.61 143.55-2.17 13.06 6.69 25.42 19.76 27.58 19.97 3.33 26.81-15.1 27.58-19.77 8.28-50.03 12.06-101.21 11.27-152.11-.88-55.8-47.94-101.88-104.91-102.72zm-110.69-19.78c-10.3-8.34-25.37-6.8-33.76 3.48-25.62 31.5-39.39 71.28-38.75 112 .59 37.58-2.47 75.27-9.11 112.05-2.34 13.05 6.31 25.53 19.36 27.89 20.11 3.5 27.07-14.81 27.89-19.36 7.19-39.84 10.5-80.66 9.86-121.33-.47-29.88 9.2-57.88 28-80.97 8.35-10.28 6.79-25.39-3.49-33.76zm109.47-62.33c-15.41-.41-30.87 1.44-45.78 4.97-12.89 3.06-20.87 15.98-17.83 28.89 3.06 12.89 16 20.83 28.89 17.83 11.05-2.61 22.47-3.77 34-3.69 75.43 1.13 137.73 61.5 138.88 134.58.59 37.88-1.28 76.11-5.58 113.63-1.5 13.17 7.95 25.08 21.11 26.58 16.72 1.95 25.51-11.88 26.58-21.11a929.06 929.06 0 0 0 5.89-119.85c-1.56-98.75-85.07-180.33-186.16-181.83zm252.07 121.45c-2.86-12.92-15.51-21.2-28.61-18.27-12.94 2.86-21.12 15.66-18.26 28.61 4.71 21.41 4.91 37.41 4.7 61.6-.11 13.27 10.55 24.09 23.8 24.2h.2c13.17 0 23.89-10.61 24-23.8.18-22.18.4-44.11-5.83-72.34zm-40.12-90.72C417.29 43.46 337.6 1.29 252.81.02 183.02-.82 118.47 24.91 70.46 72.94 24.09 119.37-.9 181.04.14 246.65l-.12 21.47c-.39 13.25 10.03 24.31 23.28 24.69.23.02.48.02.72.02 12.92 0 23.59-10.3 23.97-23.3l.16-23.64c-.83-52.5 19.16-101.86 56.28-139 38.76-38.8 91.34-59.67 147.68-58.86 69.45 1.03 134.73 35.56 174.62 92.39 7.61 10.86 22.56 13.45 33.42 5.86 10.84-7.62 13.46-22.59 5.84-33.43z\&#34;\&gt;\&lt;\/path\&gt;\&lt;\/svg\&gt;\n{{- else if (eq $icon_name &#34;about&#34;) -}}\n\&lt;svg aria-hidden\=\&#34;true\&#34; focusable\=\&#34;false\&#34; data-prefix\=\&#34;far\&#34; data-icon\=\&#34;address-card\&#34; class\=\&#34;svg-inline--fa fa-address-card fa-w-18\&#34; role\=\&#34;img\&#34; xmlns\=\&#34;http:\/\/www.w3.org\/2000\/svg\&#34; viewBox\=\&#34;0 0 576 512\&#34;\&gt;\&lt;path fill\=\&#34;currentColor\&#34; d\=\&#34;M528 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h480c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zm0 400H48V80h480v352zM208 256c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm-89.6 128h179.2c12.4 0 22.4-8.6 22.4-19.2v-19.2c0-31.8-30.1-57.6-67.2-57.6-10.8 0-18.7 8-44.8 8-26.9 0-33.4-8-44.8-8-37.1 0-67.2 25.8-67.2 57.6v19.2c0 10.6 10 19.2 22.4 19.2zM360 320h112c4.4 0 8-3.6 8-8v-16c0-4.4-3.6-8-8-8H360c-4.4 0-8 3.6-8 8v16c0 4.4 3.6 8 8 8zm0-64h112c4.4 0 8-3.6 8-8v-16c0-4.4-3.6-8-8-8H360c-4.4 0-8 3.6-8 8v16c0 4.4 3.6 8 8 8zm0-64h112c4.4 0 8-3.6 8-8v-16c0-4.4-3.6-8-8-8H360c-4.4 0-8 3.6-8 8v16c0 4.4 3.6 8 8 8z\&#34;\&gt;\&lt;\/path\&gt;\&lt;\/svg\&gt;&#39;</span> themes/hugo-theme-papermod/layouts/partials/svg.html &gt; layouts/partials/svg.html
+</code></pre></div><h3 id=add-comments>Add comments<a hidden class=anchor aria-hidden=true href=#add-comments>#</a></h3><p>I&rsquo;m using <a href=https://utteranc.es/>utteranc.es</a> as commenting system, which in turn uses the github API to
+store the comments inside of github issues. Since I&rsquo;m using github pages anyway,
+I&rsquo;m alright with this and prefer it to third party commenting systems.</p><p>In order to set up utterances a <code>utterances.json</code> has to be generated inside the
+<code>blog/public</code> folder, also a partial with the utteranc.es setup has to be
+created:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>cat <span style=color:#e6db74>&lt;&lt; EOF &gt; ~/blog/public/utterances.json
+</span><span style=color:#e6db74>{
+</span><span style=color:#e6db74>  &#34;origins&#34;: [
+</span><span style=color:#e6db74>    &#34;https://oblivious.observer&#34;,
+</span><span style=color:#e6db74>    &#34;https://observer.github.io&#34;
+</span><span style=color:#e6db74>  ]
+</span><span style=color:#e6db74>}
+</span><span style=color:#e6db74>EOF</span>
+
+cat <span style=color:#e6db74>&lt;&lt; EOF &gt; ~/blog/layouts/partials/comments.html
+</span><span style=color:#e6db74>&lt;!-- Comments area start --&gt;
+</span><span style=color:#e6db74>  &lt;script src=https://utteranc.es/client.js
+</span><span style=color:#e6db74>    repo=observer/observer.github.io
+</span><span style=color:#e6db74>    issue-term=url
+</span><span style=color:#e6db74>    label=💬
+</span><span style=color:#e6db74>    theme=photon-dark
+</span><span style=color:#e6db74>    crossorigin=anonymous
+</span><span style=color:#e6db74>    async&gt;
+</span><span style=color:#e6db74>  &lt;/script&gt;
+</span><span style=color:#e6db74>&lt;!-- Comments area end --&gt;
+</span><span style=color:#e6db74>EOF</span>
+</code></pre></div><h3 id=removing-the-html-footer>Removing the html-footer<a hidden class=anchor aria-hidden=true href=#removing-the-html-footer>#</a></h3><p>I knid of like the idea of not having a footer that screams how and using which
+technology the site is built on every post, so I chose to remove it, there is
+this post explaining my workflow in detail as well as a short <a href=https://gist.githubusercontent.com/observer/a3e52d3c547eeccda5ac4d56a7b96a1b/raw/dc840202b756cb78d12fa6808744ef739e3ab67c/about>tl;dr</a> I link to in
+the about page (probably look at the link in the about page, this one will
+probably be forgotten and outdated in no time). To remove the footer <code>sed</code> can
+be used:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>sed <span style=color:#e6db74>&#39;/&lt;footer/,/&lt;\/footer/d&#39;</span> themes/hugo-theme-papermod/layouts/partials/footer.html &gt; layouts/partials/footer.html
+</code></pre></div><h2 id=add-a-cname-file>Add a CNAME file<a hidden class=anchor aria-hidden=true href=#add-a-cname-file>#</a></h2><p>In order to make sure the site is published under its custom domain, a <code>CNAME</code>
+file has to be created inside the public directory:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>mkdir -p ~/blog/public
+cat <span style=color:#e6db74>&lt;&lt; EOF &gt; ~/blog/public/CNAME
+</span><span style=color:#e6db74>oblivious.observer
+</span><span style=color:#e6db74>EOF</span>
+</code></pre></div><h2 id=image-magic-with-imagemagick>Image Magic with <code>imagemagick</code><a hidden class=anchor aria-hidden=true href=#image-magic-with-imagemagick>#</a></h2><p>The <a href=https://github.com/adityatelange/hugo-PaperMod>Papermod</a> themes <code>config.yml</code> contains a few lines that can be used to set up
+image files such as the sites favicon in the <code>blog/static</code> directory. Since I basically started out with only a single 16x16 png file, I decided to try setting everything up using the <code>shell.nix</code>.</p><p>Initially I converted the image to text using <code>base64</code>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>blog/static$ base64 observer.png
+iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9
+kT1Iw0AYht+mikUqCnYQcchQXbQgKuKoVShChVArtOpgcukfNGlIUlwcBdeCgz+LVQcXZ10dXAVB
+8AfEydFJ0UVK/C4ptIjxjuMe3vvel7vvAKFeZprVMQ5oum2mEnExk10Vu14RQh/NUYgys4w5SUrC
+d3zdI8D3uxjP8q/7c/SoOYsBAZF4lhmmTbxBPL1pG5z3iSOsKKvE58RjJl2Q+JHrisdvnAsuCzwz
+YqZT88QRYrHQxkobs6KpEU8RR1VNp3wh47HKeYuzVq6y5j35C8M5fWWZ67SGkMAiliBBhIIqSijD
+Rox2nRQLKTqP+/gHXb9ELoVcJTByLKACDbLrB/+D37218pMTXlI4DnS+OM7HMNC1CzRqjvN97DiN
+EyD4DFzpLX+lDsx8kl5radEjoHcbuLhuacoecLkDDDwZsim7UpCWkM8D72f0TVmg/xboXvP61jzH
+6QOQpl4lb4CDQ2CkQNnrPu8Otfft35pm/34AiXxysDj1F4kAAAAGYktHRAD/AP8A/6C9p5MAAAAJ
+cEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfkCBAQLiQKSqHnAAAAGXRFWHRDb21tZW50AENyZWF0
+ZWQgd2l0aCBHSU1QV4EOFwAAAiRJREFUOMulk7FO40AQhj/HS7wGOQYSB6KIiCJFGioKLKFDouYx
+eCiKE+/ASyCBeAOEIlEQhDf2OSRKNo7XvgJiHXdX3f3NjGa0M//M/GuFYVgaYwAoigJjDGVZUhQF
+AIvFgr29PYwxGGPQWpNlGb7vk+c5AuDk5IQkSXAch9FoxPb2Nt1uF4DHx0eCIMC2bYwxzOdzkiRh
+Z2eHp6cnapPJhNFoRK/XYzab0e12CcOQg4MDpJR0Oh3SNOXw8JBer4eUkuPjY7IsoygKrKOjo1JK
++U8jTKdTxKbjMFaqKlCr1bAsC2MMUkpMlhG9vlYxYduUQBrHdPb3EX6jwYYQCCEAKgswXywA2HRd
+8jwnW60A2BCCra0tsiz7WOK383P6/T7NZhOAOI4B2N3dBaDdbgMQRRHtdpsoigD4fnWFWC6XjMdj
+xuMxv+Pi4oI4jkmSpIqt/clkgmVZHwxarRb9fv+PAmsmd3d3/A0/0hRhWRZBEDAYDDg9PQXg+vqa
+ZrNZFQjDEIDLy0sAbm5uGA6HvDw/U4MSpRTq8xIAg8Gg8td7+RVBEKCUYrlcIlarnHq9jtaa29tb
+AJRSVfe1Bar8cDjEGPMh5XQ2A0BKWbHQWn+Z/ezsDM/zUEqhtcbzPFzX5eXtDeE4DovPewOUZYnj
+OF/0YNs20+kUAM/z0Frz/v5OWZaIer2O67rc399XD9YMWq0WAA8PD1VuLftGo4Hv+1j/+51/Agiw
+QFrcT1GrAAAAAElFTkSuQmCC
+</code></pre></div><p>Then in <code>shell.nix</code> define a string:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix><span style=color:#f92672>...</span>
+  observer-16x16 <span style=color:#960050;background-color:#1e0010>=</span> <span style=color:#e6db74>&#39;&#39;
+</span><span style=color:#e6db74>    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9
+</span><span style=color:#e6db74>    kT1Iw0AYht+mikUqCnYQcchQXbQgKuKoVShChVArtOpgcukfNGlIUlwcBdeCgz+LVQcXZ10dXAVB
+</span><span style=color:#e6db74>    8AfEydFJ0UVK/C4ptIjxjuMe3vvel7vvAKFeZprVMQ5oum2mEnExk10Vu14RQh/NUYgys4w5SUrC
+</span><span style=color:#e6db74>    d3zdI8D3uxjP8q/7c/SoOYsBAZF4lhmmTbxBPL1pG5z3iSOsKKvE58RjJl2Q+JHrisdvnAsuCzwz
+</span><span style=color:#e6db74>    YqZT88QRYrHQxkobs6KpEU8RR1VNp3wh47HKeYuzVq6y5j35C8M5fWWZ67SGkMAiliBBhIIqSijD
+</span><span style=color:#e6db74>    Rox2nRQLKTqP+/gHXb9ELoVcJTByLKACDbLrB/+D37218pMTXlI4DnS+OM7HMNC1CzRqjvN97DiN
+</span><span style=color:#e6db74>    EyD4DFzpLX+lDsx8kl5radEjoHcbuLhuacoecLkDDDwZsim7UpCWkM8D72f0TVmg/xboXvP61jzH
+</span><span style=color:#e6db74>    6QOQpl4lb4CDQ2CkQNnrPu8Otfft35pm/34AiXxysDj1F4kAAAAGYktHRAD/AP8A/6C9p5MAAAAJ
+</span><span style=color:#e6db74>    cEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfkCBAQLiQKSqHnAAAAGXRFWHRDb21tZW50AENyZWF0
+</span><span style=color:#e6db74>    ZWQgd2l0aCBHSU1QV4EOFwAAAiRJREFUOMulk7FO40AQhj/HS7wGOQYSB6KIiCJFGioKLKFDouYx
+</span><span style=color:#e6db74>    eCiKE+/ASyCBeAOEIlEQhDf2OSRKNo7XvgJiHXdX3f3NjGa0M//M/GuFYVgaYwAoigJjDGVZUhQF
+</span><span style=color:#e6db74>    AIvFgr29PYwxGGPQWpNlGb7vk+c5AuDk5IQkSXAch9FoxPb2Nt1uF4DHx0eCIMC2bYwxzOdzkiRh
+</span><span style=color:#e6db74>    Z2eHp6cnapPJhNFoRK/XYzab0e12CcOQg4MDpJR0Oh3SNOXw8JBer4eUkuPjY7IsoygKrKOjo1JK
+</span><span style=color:#e6db74>    +U8jTKdTxKbjMFaqKlCr1bAsC2MMUkpMlhG9vlYxYduUQBrHdPb3EX6jwYYQCCEAKgswXywA2HRd
+</span><span style=color:#e6db74>    8jwnW60A2BCCra0tsiz7WOK383P6/T7NZhOAOI4B2N3dBaDdbgMQRRHtdpsoigD4fnWFWC6XjMdj
+</span><span style=color:#e6db74>    xuMxv+Pi4oI4jkmSpIqt/clkgmVZHwxarRb9fv+PAmsmd3d3/A0/0hRhWRZBEDAYDDg9PQXg+vqa
+</span><span style=color:#e6db74>    ZrNZFQjDEIDLy0sAbm5uGA6HvDw/U4MSpRTq8xIAg8Gg8td7+RVBEKCUYrlcIlarnHq9jtaa29tb
+</span><span style=color:#e6db74>    AJRSVfe1Bar8cDjEGPMh5XQ2A0BKWbHQWn+Z/ezsDM/zUEqhtcbzPFzX5eXtDeE4DovPewOUZYnj
+</span><span style=color:#e6db74>    OF/0YNs20+kUAM/z0Frz/v5OWZaIer2O67rc399XD9YMWq0WAA8PD1VuLftGo4Hv+1j/+51/Agiw
+</span><span style=color:#e6db74>    QFrcT1GrAAAAAElFTkSuQmCC
+</span><span style=color:#e6db74>  &#39;&#39;</span>;
+<span style=color:#f92672>...</span>
+</code></pre></div><p>Then add <code>imagemagick</code> to the <code>buildInputs</code> and finally add some lines in order
+to make sure create a bunch of upscaled images using imagesmagicks <code>point</code>
+filter:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix><span style=color:#f92672>...</span>
+    buildInputs <span style=color:#960050;background-color:#1e0010>=</span> [
+      hugo imagemagick
+    ];
+
+<span style=color:#f92672>...</span>
+
+    mkdir <span style=color:#960050;background-color:#1e0010>-</span>p static
+    for size in <span style=color:#960050;background-color:#1e0010>16</span>x16 <span style=color:#960050;background-color:#1e0010>32</span>x32 <span style=color:#960050;background-color:#1e0010>64</span>x64 <span style=color:#960050;background-color:#1e0010>128</span>x128 <span style=color:#960050;background-color:#1e0010>256</span>x256 <span style=color:#960050;background-color:#1e0010>512</span>x512; do
+      echo <span style=color:#960050;background-color:#1e0010>&#39;$</span>{observer-16x16}<span style=color:#960050;background-color:#1e0010>&#39;</span> <span style=color:#960050;background-color:#1e0010>|</span> base64 <span style=color:#960050;background-color:#1e0010>-</span>d <span style=color:#960050;background-color:#1e0010>|</span> convert<span style=color:#f92672> - </span><span style=color:#960050;background-color:#1e0010>-</span>filter point <span style=color:#960050;background-color:#1e0010>-</span>resize <span style=color:#960050;background-color:#1e0010>$</span>size <span style=color:#e6db74>static/observer-</span><span style=color:#960050;background-color:#1e0010>$</span>size<span style=color:#f92672>.</span>png
+    done
+<span style=color:#f92672>...</span>
+</code></pre></div><p>I&rsquo;m pretty sure this is not exactly how to do it the nix way, since we kind of
+circumvent the nix store, but I still need learn the language.</p><p>Finally set up the new filenames in the config:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml>    <span style=color:#66d9ef>assets</span>:
+        <span style=color:#66d9ef>favicon</span>: <span style=color:#e6db74>&#34;/observer-16x16.png&#34;</span>
+        <span style=color:#66d9ef>favicon16x16</span>: <span style=color:#e6db74>&#34;/observer-16x16.png&#34;</span>
+        <span style=color:#66d9ef>favicon32x32</span>: <span style=color:#e6db74>&#34;/observer-32x32.png&#34;</span>
+        <span style=color:#66d9ef>apple_touch_icon</span>: <span style=color:#e6db74>&#34;/observer-512x512.png&#34;</span>
+        <span style=color:#66d9ef>safari_pinned_tab</span>: <span style=color:#e6db74>&#34;/observer-512x512.png&#34;</span>
+
+    <span style=color:#66d9ef>label</span>:
+        <span style=color:#66d9ef>text</span>: <span style=color:#e6db74>&#34; &#34;</span>
+        <span style=color:#66d9ef>icon</span>:  /observer-64x64.png
+        <span style=color:#66d9ef>iconHeight</span>: <span style=color:#ae81ff>35</span>
+
+    <span style=color:#75715e># profile-mode</span>
+    <span style=color:#66d9ef>profileMode</span>:
+        ...
+        <span style=color:#66d9ef>imageUrl</span>: <span style=color:#e6db74>&#34;/observer-512x512.png&#34;</span>
+        ...
+</code></pre></div><h2 id=release-process-using-gpg>Release Process using <code>gpg</code><a hidden class=anchor aria-hidden=true href=#release-process-using-gpg>#</a></h2><p>The last time I set up a blog I started signing the files inside the public
+directory using <code>gpg</code>. Let&rsquo;s add something similiar to the <code>shellHook</code> in
+<code>shell.nix</code>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>...
+    <span style=color:#75715e># let&#39;s define an alias to release the blog content. However since</span>
+    <span style=color:#75715e># bash aliases do not support parameters, lets use a function instead</span>
+    release<span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+      <span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> <span style=color:#e6db74>&#34;</span>$1<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;the&#34;</span> <span style=color:#f92672>]</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>[</span> <span style=color:#e6db74>&#34;</span>$2<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;kraken&#34;</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+        cd ~/blog
+        <span style=color:#66d9ef>for</span> f in <span style=color:#66d9ef>$(</span>find -L public/ | grep <span style=color:#e6db74>&#39;.sig$&#39;</span><span style=color:#66d9ef>)</span>; <span style=color:#66d9ef>do</span>
+          rm $f
+        <span style=color:#66d9ef>done</span>
+        hugo
+        <span style=color:#66d9ef>for</span> f in <span style=color:#66d9ef>$(</span>find -L public/ | grep -v <span style=color:#e6db74>&#34;.git&#34;</span><span style=color:#66d9ef>)</span>; <span style=color:#66d9ef>do</span>
+          <span style=color:#66d9ef>if</span> ! <span style=color:#f92672>[</span> -d <span style=color:#e6db74>&#34;</span>$f<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+            gpg -u 48A1CC122B2B6E37FDA4B7B474344F2BCE39AA5D --output $f.sig --detach-sig $f
+          <span style=color:#66d9ef>fi</span>
+        <span style=color:#66d9ef>done</span>
+        cd -
+      <span style=color:#66d9ef>else</span>
+        echo <span style=color:#e6db74>&#39;
+</span><span style=color:#e6db74>          ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▄▄███░░░░░
+</span><span style=color:#e6db74>          ░░▄▄░░░░░░░░░░░░░░░░░░░░░░░░░███████░░░░
+</span><span style=color:#e6db74>          ░░███▄░░░░░░░░░░░░░░░░░░░░░▄█████▀░█░░░░
+</span><span style=color:#e6db74>          ░░▀█████▄▄▄▄▀▀▀▀▀▀▀▀░▄▄▄▄▄███▀▀░▀███░░░░
+</span><span style=color:#e6db74>          ░░░░███▀▀░░░░░░░░░░░░░░▀▀▀███░░░░██▀░░░░
+</span><span style=color:#e6db74>          ░░░░██░░░░░░▄░░░░░░░░░░░░░░░▀▀▄▄███░░░░░
+</span><span style=color:#e6db74>          ░░░░▄█▄▄████▀█░█▄██▄▄░░░░░░░░░████▀░░░░░
+</span><span style=color:#e6db74>          ░░░▄████████░░░██████▄▄▄▄░░░░░████░░░░░░
+</span><span style=color:#e6db74>          ░░░███░█░▀██░░░▀███░█░░███▄▄░░░░▀█░░░░░░
+</span><span style=color:#e6db74>          ░░░████▄███▄▄░░░███▄▄▄█████▀░░░░░██░░░░░
+</span><span style=color:#e6db74>          ░░▄████▀▀░▀██▀░░░▀█████████░░░░░░██░░░░░
+</span><span style=color:#e6db74>          ░░▀███░░░▄▄▀▀▀▄▄░░░░▀██████░░░░░░░█░░░░░
+</span><span style=color:#e6db74>          ░░░███░░█░░░░░░░▀░░░░▀███▀░░░░░░░░█░░░░░
+</span><span style=color:#e6db74>          ░░░████▄▀░░░░░░░░▀░░░████▄░░░░░░░░░█░░░░
+</span><span style=color:#e6db74>          ░░░██████▄░░░░░░░░░▀▀████▀░░░░░░░░░█░░░░
+</span><span style=color:#e6db74>          ░░▄█████████▀▀▀▀░░░░░░░░░░░░░░░░░░░▀█░░░
+</span><span style=color:#e6db74>          ░░███████████▄▄▄▄░░░░░░░░░░░░░░░░░░░█▄░░
+</span><span style=color:#e6db74>          ░░████████▀▀▀▀▀▀░░░░░░░░░░░░░░░░░░░░░█▄░
+</span><span style=color:#e6db74>          ░░████████▄▄░░░░░░░░░░░░░░░░░░░░░░░░░░█░
+</span><span style=color:#e6db74>          ░▄███████▄▄░░░░░░░░░░░░░░░░░░░░░░░░░░░░█
+</span><span style=color:#e6db74>          ░▀▀▀▀▀▀▀▀▀█▀▀▀░░░░░░░░░░░░░░░░░░░░░░░░░█
+</span><span style=color:#e6db74>          NOPE.. use them correct words human..
+</span><span style=color:#e6db74>        &#39;</span>
+      <span style=color:#66d9ef>fi</span>
+    <span style=color:#f92672>}</span>
+...
+</code></pre></div><p>Perfect! Finally I&rsquo;ve found a use for the phrase <code>release the kraken</code>. After
+executing the <code>release</code> function, I still have to add the files inside
+<code>blog/public</code> to the git repository and push them.</p><h2 id=pushing-all-the-things>Pushing all the things<a hidden class=anchor aria-hidden=true href=#pushing-all-the-things>#</a></h2><p>In order to publish my posts, I defined another little function inside the
+<code>shellHook</code>, which generates a git commit of the <code>blog/public</code> repo (which
+contains the github pages link) and pushes everything using an ssh-key that I
+keep inside my password store:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>...
+    publish<span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+      <span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> <span style=color:#e6db74>&#34;</span>$1<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;all&#34;</span> <span style=color:#f92672>]</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>[</span> <span style=color:#e6db74>&#34;</span>$2<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;the&#34;</span> <span style=color:#f92672>]</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>[</span> <span style=color:#e6db74>&#34;</span>$2<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;things&#34;</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+        cd ~/blog/public
+        git add .
+        git commit -m <span style=color:#e6db74>&#34;</span><span style=color:#66d9ef>$(</span>date <span style=color:#e6db74>&#39;+%s&#39;</span> | perl -lpe <span style=color:#e6db74>&#39;$_=join &#34; &#34;, unpack&#34;(B8)*&#34;&#39;</span><span style=color:#66d9ef>)</span><span style=color:#e6db74>&#34;</span>
+        ssh-agent bash -c <span style=color:#e6db74>&#39;ssh-add - &lt;&lt;&lt; $(pass oblivious.observer/github/ssh-key-pair | grep -v &#34;ssh-ed25519&#34;); git push&#39;</span>
+        cd -
+      <span style=color:#66d9ef>else</span>
+        echo <span style=color:#e6db74>&#39;
+</span><span style=color:#e6db74>        ... the same grumpy art as above ...
+</span><span style=color:#e6db74>        NOPE.. use them correct words human..
+</span><span style=color:#e6db74>        &#39;</span>
+      <span style=color:#66d9ef>fi</span>
+    <span style=color:#f92672>}</span>
+...
+</code></pre></div><h2 id=shell-dot-nix-and-config-dot-yml><code>shell.nix</code> and <code>config.yml</code><a hidden class=anchor aria-hidden=true href=#shell-dot-nix-and-config-dot-yml>#</a></h2><p>If by any chance someone here stumbles over this post, <a href=https://gist.github.com/observer/b9fe7de1bd4de2392c4f62ad368fe38e>here</a> are the <code>shell.nix</code>
+as well as the <code>config.yml</code> I&rsquo;m currently using, you should be able to get up
+and running from using these files as well as this blog post pretty easy. In
+case you do, feel free to drop me a line :)</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://oblivious.observer/tags/nixos/>NixOS</a></li><li><a href=https://oblivious.observer/tags/orgmode/>orgmode</a></li><li><a href=https://oblivious.observer/tags/hugo/>hugo</a></li></ul></footer><script src=https://utteranc.es/client.js repo=observer/observer.github.io issue-term=url label=💬 theme=photon-dark crossorigin=anonymous async></script></article></main><a href=#top aria-label="go to top" title="Go to Top (Alt + G)"><button class=top-link id=top-link type=button accesskey=g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg></button></a>
+<script defer src=/assets/js/highlight.min.27cd435cc9ed6abb4b496581b151804f79f366c412620272bb94e2f5f598ebcc.js integrity="sha256-J81DXMntartLSWWBsVGAT3nzZsQSYgJyu5Ti9fWY68w=" onload=hljs.initHighlightingOnLoad();></script><script>window.onload=function(){if(localStorage.getItem("menu-scroll-position")){document.getElementById('menu').scrollLeft=localStorage.getItem("menu-scroll-position");}}
+document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener("click",function(e){e.preventDefault();var id=this.getAttribute("href").substr(1);if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({behavior:"smooth"});}else{document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();}
+if(id==="top"){history.replaceState(null,null," ");}else{history.pushState(null,null,`#${id}`);}});});var mybutton=document.getElementById("top-link");window.onscroll=function(){if(document.body.scrollTop>800||document.documentElement.scrollTop>800){mybutton.style.visibility="visible";mybutton.style.opacity="1";}else{mybutton.style.visibility="hidden";mybutton.style.opacity="0";}};function menu_on_scroll(){localStorage.setItem("menu-scroll-position",document.getElementById('menu').scrollLeft);}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{if(document.body.className.includes("dark")){document.body.classList.remove('dark');localStorage.setItem("pref-theme",'light');}else{document.body.classList.add('dark');localStorage.setItem("pref-theme",'dark');}})</script></body></html>

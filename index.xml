@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>oblivious observer</title>
+    <link>https://oblivious.observer/</link>
+    <description>Recent content on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Mon, 22 Mar 2021 00:00:00 +0100</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Blogging with orgmode, hugo and nix</title>
+      <link>https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/</link>
+      <pubDate>Mon, 22 Mar 2021 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/posts/blogging-with-ox-hugo-2.0/</guid>
+      <description>How I yet again decided to set up another iteration of this blog. This time using nix, hugo and of course orgmode..
+Introduction This is my third attempt of setting up an easy to use blogging workflow. The first time I chose to try out use ox-hugo as well as github pages. Initially everything worked, but I quickly stopped writing posts because my initial setup using a single orgmode file with ox-hugo did not match my notetaking workflow, where I basically generate a bunch of random files and some of them get reworked or updated enough for me to think about publishing them.</description>
+    </item>
+    
+    <item>
+      <title>Including noweb snippets in orgmode</title>
+      <link>https://oblivious.observer/posts/orgmode-include-noweb-extensions/</link>
+      <pubDate>Mon, 14 Sep 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/orgmode-include-noweb-extensions/</guid>
+      <description>This is a bit of a strange one, but in case anyone else goes down the rabbit hole of using noweb inside orgmode, this might be interesting.
+noweb syntax provides a really nifty way to split up or even autogenerate code blocks in orgmode documents. When writing literate documents noweb syntax also provides one with a way of staying on topic, whenever these files become more complex. If you&amp;rsquo;ve never used noweb syntax in orgmode you should definitely look it up.</description>
+    </item>
+    
+    <item>
+      <title>NixOS encrypted VM installation</title>
+      <link>https://oblivious.observer/posts/nixos-20.03-luks-zfs-kvm/</link>
+      <pubDate>Sat, 29 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/nixos-20.03-luks-zfs-kvm/</guid>
+      <description>In this post I&amp;rsquo;ll describe how to set up a sparse VM image with full disk encryption and NixOS on ZFS, which can be uploaded to a VPS provider and then unlocked on boot using ssh.
+First we need to create a virtual machine image file. Initially I tried using qemu-img, but somehow the image file was missing some information and the VM would not recognize a disk. Instead I went with the easy way and used virt-manager to create a new VM with the correct image size.</description>
+    </item>
+    
+    <item>
+      <title>NixOS on ZFS Install Script</title>
+      <link>https://oblivious.observer/posts/nixos-zfs-install-script/</link>
+      <pubDate>Wed, 26 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/nixos-zfs-install-script/</guid>
+      <description>This is a rather short post and the start of what will hopefully become a nice little series of posts related to NixOS.
+I just had to bulk install NixOS on a bunch of Intel NUCs, here is a little script to automate the installation process. Some bits and pieces are taken from other installation scripts, but it&amp;rsquo;s been a while, so I don&amp;rsquo;t know who to credit for them, I&amp;rsquo;m fairly sure this wonderful post from the NixOS discourse was involved though.</description>
+    </item>
+    
+    <item>
+      <title>Introducing oblivious</title>
+      <link>https://oblivious.observer/posts/introducing-oblivious/</link>
+      <pubDate>Sat, 22 Aug 2020 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/introducing-oblivious/</guid>
+      <description>There is a new static site generator on the block.. also hello world..
+Update (2021): guess what, I&amp;rsquo;m back to hugo.. Not necessarily because I started to dislike the idea of oblivious, I think it still is a pretty interesting concept and I particularly love the idea of being able to create a site, while having minimal dependencies and being pretty much language agnostic. The reason I switched was that on the one hand I got a bit more involved with NixOS, which seems to be even better suited to some of the things oblivious ended up taking care of (such as fetching resources) and on the other hand I just want to be able to publish something by pressing a bunch of keys without having to actively maintain the underlying tooling.</description>
+    </item>
+    
+    <item>
+      <title>Introducing a Boot Environment Manager for Proxmox</title>
+      <link>https://oblivious.observer/posts/proxmoxve6-boot-environment-manager/</link>
+      <pubDate>Tue, 29 Oct 2019 00:00:00 +0100</pubDate>
+      
+      <guid>https://oblivious.observer/posts/proxmoxve6-boot-environment-manager/</guid>
+      <description>This post introduces a fork of the FreeBSD beadm utility which can be used to manage Boot Environments on Proxmox ZFS Installations.
+In this Post I will showcase how to use the beadm Boot Environment manager in Proxmox. After the showcase there are some notes on what I did to make beadm run on Linux in general and finally a part about what has been changed in order to make beadm work with Proxmox specifically.</description>
+    </item>
+    
+    <item>
+      <title>Proof of Concept: Adding Boot Environments to Proxmox VE 6</title>
+      <link>https://oblivious.observer/posts/poc-boot-environments-proxmoxve6/</link>
+      <pubDate>Wed, 28 Aug 2019 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/poc-boot-environments-proxmoxve6/</guid>
+      <description>Dear Reader, this time I would like to invite you onto a small journey: To boldly go where no man has gone before (Alright, that&amp;rsquo;s not true, but I think it&amp;rsquo;s the first time someone documents this kind of thing in the context of Proxmox). We&amp;rsquo;re about to embark on a journey to make your Proxmox host quite literally immortal. Also since what we are essentially doing here is only a Proof of concept, you probably shouldn&amp;rsquo;t use it in production, but as it&amp;rsquo;s really amazing, so you might want to try it out in a test environment.</description>
+    </item>
+    
+    <item>
+      <title>Encrypting Proxmox VE 6: ZFS, LUKS, systemd-boot and Dropbear</title>
+      <link>https://oblivious.observer/posts/proxmoxve6-zfs-luks-systemdboot-dropbear/</link>
+      <pubDate>Fri, 23 Aug 2019 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/proxmoxve6-zfs-luks-systemdboot-dropbear/</guid>
+      <description>This describes how to set up a fully encrypted Proxmox VE 6 host with ZFS root and unlocking it remotely using the dropbear ssh server. Also it describes how you can do that, while keeping systemd-boot and thus also the pve tooling intact. (I&amp;rsquo;m not sure if the pve tooling still works if you replace systemd-boot with grub, which seems to be the common solution to creating this kind of setup, maybe it does.</description>
+    </item>
+    
+    <item>
+      <title>Archive</title>
+      <link>https://oblivious.observer/archives/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://oblivious.observer/archives/</guid>
+      <description>archives</description>
+    </item>
+    
+    <item>
+      <title>Search</title>
+      <link>https://oblivious.observer/search/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://oblivious.observer/search/</guid>
+      <description>search</description>
+    </item>
+    
+  </channel>
+</rss>
