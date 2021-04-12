@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>tinc on oblivious observer</title>
+    <link>https://oblivious.observer/tags/tinc/</link>
+    <description>Recent content in tinc on oblivious observer</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sat, 03 Apr 2021 00:00:00 +0200</lastBuildDate>
+    
+	<atom:link href="https://oblivious.observer/tags/tinc/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Tinc different! - Part I: The Fellowship of the Ping</title>
+      <link>https://oblivious.observer/posts/tincdifferent-i-tinc-nixos/</link>
+      <pubDate>Sat, 03 Apr 2021 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/tincdifferent-i-tinc-nixos/</guid>
+      <description>This is a post about tinc - a nifty little Mesh VPN service. It is also the first part of a little series of posts related to tinc and NixOS. In this first part I&amp;rsquo;ll just write a bit about how to set up tinc, then in the second part I&amp;rsquo;ll take a closer look into how writing a NixOS module can managing tinc networks easier. And finally in the third part I&amp;rsquo;ll present a rewrite of the module with a bunch more features.</description>
+    </item>
+    
+  </channel>
+</rss>
