@@ -1,0 +1,824 @@
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Tinc different! - Part II: The Two Tunnels | oblivious observer</title><meta name=keywords content="NixOS,tinc"><meta name=description content="This is the second part of my little series about tinc and NixOS, where I first shortly introduced tinc and then explained how to set it up on Linux in general as well as on NixOS. This part is more or less a rewrite of a question I posted to the NixOS discourse a while ago.
+For a while I&rsquo;ve been using tinc on a bunch of infrastructure and so far it&rsquo;s basically been rock solid: once set up nodes anywhere simply join their network and become reachable for anyone who needs to access them."><meta name=author content="oblivious observer"><link rel=canonical href=https://oblivious.observer/posts/tincdifferent-ii-tinc-nixos-module/><link href=/assets/css/stylesheet.min.3aa8787152fda8d7a051800d268ab9d19c1ed320487714abfc05bd98178abb92.css integrity="sha256-Oqh4cVL9qNegUYANJoq50Zwe0yBIdxSr/AW9mBeKu5I=" rel="preload stylesheet" as=style><link rel=icon href=https://oblivious.observer/observer-16x16.png><link rel=icon type=image/png sizes=16x16 href=https://oblivious.observer/observer-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://oblivious.observer/observer-32x32.png><link rel=apple-touch-icon href=https://oblivious.observer/observer-512x512.png><link rel=mask-icon href=https://oblivious.observer/observer-512x512.png><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><meta name=generator content="Hugo 0.74.3"><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.13.2/dist/katex.min.css integrity=sha384-Cqd8ihRLum0CCg8rz0hYKPoLZ3uw+gES2rXQXycqnL5pgVQIflxAUDS7ZSjITLb5 crossorigin=anonymous><script defer src=https://cdn.jsdelivr.net/npm/katex@0.13.2/dist/katex.min.js integrity=sha384-1Or6BdeNQb0ezrmtGeqQHFpppNd7a/gw29xeiSikBbsb44xu3uAo8c7FwbF5jhbd crossorigin=anonymous></script><script defer src=https://cdn.jsdelivr.net/npm/katex@0.13.2/dist/contrib/auto-render.min.js integrity=sha384-vZTG03m+2yp6N6BNi5iM4rW4oIwk5DfcNdFfxkk9ZWpDriOkXX8voJBFrAO7MpVl crossorigin=anonymous onload=renderMathInElement(document.body);></script><link rel=stylesheet href=https://oblivious.observer/css/syntax.css><meta property="og:title" content="Tinc different! - Part II: The Two Tunnels"><meta property="og:description" content="This is the second part of my little series about tinc and NixOS, where I first shortly introduced tinc and then explained how to set it up on Linux in general as well as on NixOS. This part is more or less a rewrite of a question I posted to the NixOS discourse a while ago.
+For a while I&rsquo;ve been using tinc on a bunch of infrastructure and so far it&rsquo;s basically been rock solid: once set up nodes anywhere simply join their network and become reachable for anyone who needs to access them."><meta property="og:type" content="article"><meta property="og:url" content="https://oblivious.observer/posts/tincdifferent-ii-tinc-nixos-module/"><meta property="og:image" content="https://oblivious.observer/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta property="article:published_time" content="2021-04-12T00:00:00+02:00"><meta property="article:modified_time" content="2021-04-12T00:00:00+02:00"><meta property="og:site_name" content="oblivious.observer"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://oblivious.observer/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta name=twitter:title content="Tinc different! - Part II: The Two Tunnels"><meta name=twitter:description content="This is the second part of my little series about tinc and NixOS, where I first shortly introduced tinc and then explained how to set it up on Linux in general as well as on NixOS. This part is more or less a rewrite of a question I posted to the NixOS discourse a while ago.
+For a while I&rsquo;ve been using tinc on a bunch of infrastructure and so far it&rsquo;s basically been rock solid: once set up nodes anywhere simply join their network and become reachable for anyone who needs to access them."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":2,"name":"Posts","item":"https://oblivious.observer/posts/"},{"@type":"ListItem","position":3,"name":"Tinc different! - Part II: The Two Tunnels","item":"https://oblivious.observer/posts/tincdifferent-ii-tinc-nixos-module/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Tinc different! - Part II: The Two Tunnels","name":"Tinc different! - Part II: The Two Tunnels","description":"This is the second part of my little series about tinc and NixOS, where I first shortly introduced tinc and then explained how to set it up on Linux in general as well as on NixOS. …","keywords":["NixOS","tinc"],"articleBody":"This is the second part of my little series about tinc and NixOS, where I first shortly introduced tinc and then explained how to set it up on Linux in general as well as on NixOS. This part is more or less a rewrite of a question I posted to the NixOS discourse a while ago.\nFor a while I’ve been using tinc on a bunch of infrastructure and so far it’s basically been rock solid: once set up nodes anywhere simply join their network and become reachable for anyone who needs to access them. The one downside I noticed was the fact that at some point maintaining and updating the node configurations became increasingly cumbersome and at some point I ended up with my laptop connected to two different VPN networks (or tunnels - hence the title) consisting of all in all almost 30 nodes.\nAs a result of tinc providing its so far excellent service, the powers that be handed me the exiting quest of scaling up the existing networks as well as adding a whole bunch of new networks to the growing mass of configuration I already had lying around. This is the tale of how I battled a bunch of long and confusing configuration files and wrote cargo culted my first NixOS module in the process, enjoy..\nIntroduction and Recap While I’ve found that using NixOS usually results in a whole lot less (and all in all an usually different) kind of headaches than running infrastructure on any other Linux distribution, I quickly came to a point, where I wasn’t really happy with the way the tinc configurations looked. As a quick recap, here is an example configuration for a small tinc network:\n{ config, lib, pkgs, ... }: { networking.firewall.allowedTCPPorts = [ 655 ]; networking.firewall.allowedUDPPorts = [ 655 ]; networking.interfaces.\"tinc.example\".ipv4.addresses = [ { address = \"10.0.0.0\"; prefixLength = 24; } ]; services.tinc.networks = { example = { name = \"node0\"; hosts = { node0 = '' Address = 192.168.122.1 Subnet = 10.0.0.0 Subnet = 192.168.0.0/24 Ed25519PublicKey = ... -----BEGIN RSA PUBLIC KEY----- ... -----END RSA PUBLIC KEY----- ''; node1 = '' Subnet = 10.0.0.1 Port = 655 Ed25519PublicKey = ... -----BEGIN RSA PUBLIC KEY----- ... -----END RSA PUBLIC KEY----- ''; node2 = '' Address = 192.168.122.3 Subnet = 10.0.0.2 Ed25519PublicKey = ... -----BEGIN RSA PUBLIC KEY----- ... -----END RSA PUBLIC KEY----- ''; ... # more nodes }; }; }; } Initially a port (655) is opened on the firewall, then the network interface tinc expects for the network called example (tinc.example) is created and assigned an IP address. Then the name of the node is defined and finally the hosts is filled with some / all other nodes configuration information of the example network (as well as the one of the local node).\nUsing this way of setting up tinc networks for some time, I noticed two things:\n My config files grew into an unmaintainable mess as the number of hosts inside the VPNs increased Since tinc is a mesh VPN it is a nice Idea to deploy the keys of all participating nodes to all participating nodes, but doing this inside the configuration means that increasing the number of nodes inside a network results in the need to change the configuration of all other nodes in the network (However at this point I should clarify: adding the node to any reachable other nodes configuration and rebuilding it is sufficient for a new node to join the network)  While the first thing is just a bit confusing, it also feels like it is some sort of a future accident or outage waiting to happen and especially the latter one felt kind of important to set up, but was at the same time something my lazy self never really got around to do.\nbuiltins.readfile to the rescue Initially I looked into how to make configuration files shorter and at some point I stumbled over builtins.readFile, which you can use to read in configuration bits and pieces from files. Instead of having all the node configurations lying around somewhere inside my config, I could create a per node configuration file containing something like this:\nAddress = 192.168.122.1 Subnet = 10.0.0.1 Subnet = 192.168.0.0/24 Ed25519PublicKey = ... -----BEGIN RSA PUBLIC KEY----- ... -----END RSA PUBLIC KEY----- Then using builtin.readfiles inside the configuration everything immediately becomes much more readable:\n{ config, lib, pkgs, ... }: { networking.firewall.allowedTCPPorts = [ 655 ]; networking.firewall.allowedUDPPorts = [ 655 ]; networking.interfaces.\"tinc.example\".ipv4.addresses = [ { address = \"10.0.0.1\"; prefixLength = 24; } ]; services.tinc.networks = { example = { name = \"node0\"; hosts = { node0 = (builtin.readFile /path/to/node0-config); node1 = (builtin.readFile /path/to/node1-config); node2 = (builtin.readFile /path/to/node2-config);  }; }; }; } Using let The next thing to do was to look at everything and try to make my code a bit more generic, so I initially started out using the let statement in order to make replacing a bunch of values inside a tinc configuration easier by at least spatially grouping them together:\n{ config, lib, pkgs, ... }: let node_name = \"node0\"; vpn_name = \"example\"; port = 655; ipv4_address = \"10.0.0.1\"; ipv4_prefix = 24; in { networking.firewall.allowedTCPPorts = [ port ]; networking.firewall.allowedUDPPorts = [ port ];  networking.interfaces.(\"tinc.\" + vpn_name).ipv4.addresses = [ { address = ipv4_address; prefixLength = ipv4_prefix; }  ]; services.tinc.networks = { example = { name = \"node0\"; hosts = { node0 = (builtin.readFile /path/to/node0-config); node1 = (builtin.readFile /path/to/node1-config); node2 = (builtin.readFile /path/to/node2-config); }; }; }; } Great! At this point a new network can be set up by easily copying the above code from another network configuration, then changing 5 lines at the top and finally explicitly defining each node inside the network inside hosts.\nReading all files from a directory At this point I decided to switch from defining every single host inside the configuration to simply adding the hosts configurations from a directory.\nI basically started a nix repl and begun writing some code until everything looked like it could work inside my configuration, then I pasted whatever I had into a config file and hoped nixos-rebuild switch wouldn’t throw any errors. This is probably not the best way to develop nix files, but having the repl to quickly try out a bunch of nix lines was a definite step up from just working inside the configuration files.\nThe only thing that was a bit frustrating was the fact that nix is really lazy and quickly stops evaluating things, so you frequently end up with something like this:\n$ nix repl Welcome to Nix version 2.3.10. Type :? for help. nix-repl a = [ 1 2 3 4 ] nix-repl b = [ 5 6 7 8 ] nix-repl c = [ a b ] nix-repl c [ [ ... ] [ ... ] ] On the other hand it’s really great to have things like :t in order to find out what type a value has:\nnix-repl :t c a list nix-repl :t 1 an integer nix-repl :t \"definitely not a string :)\" a string nix-repl :t {} a set Initially I wanted to read in every file from some directory and then fill up services.tinc.network..hosts with key-value pairs created from the files name and content. Later on however I noticed that hosts is an attrset and due to that discarded the idea. Instead I simply created a filled attrset that I then supplied to hosts. In order to do that, I switched from keeping the nodes config in regular files to using JSON:\n$ tree /etc/nixos/vpn/tinc/example /etc/nixos/vpn/tinc/example ├── node0.json ├── node1.json └── node2.json $ bat /etc/nixos/vpn/tinc/example/node0.json ───────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │ File: /etc/nixos/vpn/tinc/example/node0.json ───────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 1 │ { 2 │ \"name\" : \"node0\", 3 │ \"value\" : \"Subnet = 10.0.0.0\\nPort = 655\\nEd25519PublicKey = ...\\n-----BEGIN RSA PUBLIC KEY-----\\n...\\n-----END RSA PUBLIC KEY-----\" 4 │ } ───────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── After a bit of trial and error, as well the revelation of nix not having loops, I arrived at the following code:\n{ config, lib, pkgs, ... }: let node_name = \"node0\"; vpn_name = \"example\"; port = 655; ipv4_address = \"10.0.0.0\"; ipv4_prefix = 24; in { networking.firewall.allowedTCPPorts = [ port ]; networking.firewall.allowedUDPPorts = [ port ]; networking.interfaces.(\"tinc.\" + vpn_name).ipv4.addresses = [ { address = ipv4_address; prefixLength = ipv4_prefix; } ]; services.tinc.networks = { mcrn0 = { name = node_name; hosts = let files = builtins.readDir (\"/etc/nixos/vpn/tinc/\" + vpn_name); filenames = builtins.attrNames files; filepaths = map (x: \"/etc/nixos/vpn/tinc/\" + vpn_name + \"/\" + x) filenames; filecontents = map builtins.readFile filepaths; jsondata = map (x: builtins.fromJSON x) filecontents; attrsetdata = builtins.listToAttrs jsondata; in attrsetdata;  }; }; } Now a tinc network can be created by changing 5 lines and supplying a folder that contains the node configurations. This folder can also be shared between all nodes and adding a new node only requires a rebuild on at least one (better of course on every) other node of the network.\nManaging multiple networks however still requires copying the file and creates duplicates of configuration code, which is another future accident waiting to happen.\nCreating a Module At this point I decided to look into Modules and decided to try and write my own. Initially I searched for some kind of tutorial on how to create a module in NixOS (especially writing one that is using the  feature was quite a bit confusing to be honest), but I didn’t really find anything, so instead I decided to take a look at some existing modules and basically ended up copying and changing the original tinc module. Initially I simply ripped out pretty much everything and set up some options I could use to verify if everything worked, namely I created a new network device with an IP address as well as an opened a port on the firewall. I started basically setting up the following options, but in a generic way:\nnetworking.firewall.allowedTCPPorts = [ port ]; networking.firewall.allowedUDPPorts = [ port ]; networking.interfaces.(\"tinc.\" + vpn_name).ipv4.addresses = [ { address = ipv4_address; prefixLength = ipv4_prefix; } ]; Here is the code for this initial “dumb” version of the module:\n{ config, lib, pkgs, ... }: with lib; let cfg = config.services.tincDifferent; in { options = { services.tincDifferent = { networks = mkOption { default = { }; type = with types; attrsOf (submodule { options = { nodeName = mkOption { default = null; type = types.nullOr types.str; description = '' Name of the Node in the tinc network. ''; }; port = mkOption { default = 655; type = types.int; description = '' TCP port of the tinc network. ''; }; ipv4Address = mkOption { default = null; type = types.nullOr types.str; description = '' IPv4 Address of the machine on the tinc network. ''; example = \"10.0.0.1\"; }; ipv4Prefix = mkOption { default = null; type = types.nullOr types.int; description = '' IPv4 Prefix of the machine on the tinc network. ''; example = 24; }; }; }); description = '' Defines the tinc networks which will be started. Each network invokes a different daemon. ''; }; }; }; config = { networking.firewall = fold (a: b: a // b) { } (flip mapAttrsToList cfg.networks (network: data: { allowedTCPPorts = [ data.port ]; allowedUDPPorts = [ data.port ]; } )); networking.interfaces = fold (a: b: a // b) { } (flip mapAttrsToList cfg.networks (network: data: { \"tinc.${network}\".ipv4.addresses = [ { address = data.ipv4Address; prefixLength = data.ipv4Prefix; } ]; } )); }; } At this point I was able to check if everything worked by simply importing the module, filling out the options, then looking if there was a new network interface and checking for open ports using something like this:\n{ config, lib, pkgs, ... }: { imports = [ ./modules/tincDifferent.nix ]; services.tincDifferent.networks.example.nodeName = \"node0\"; services.tincDifferent.networks.example.ipv4Address = \"10.0.0.1\"; services.tincDifferent.networks.example.ipv4Prefix = 24; # Port 655 is a default value, but it could of course be defined like this: # services.tincDifferent.networks.example.port = 655; } Note that, the code above is using a nested (unnamed) option in order to create the generic *..* functionality. If I understand correctly this can generally be achieved by doing something like this in the options part of the module:\n... options = { services.exampleService = { exampleOption = mkOption { default = { }; type = with types; attrsOf (submodule { options = { enable = mkOption { default = false; type = types.bool; description = '' just an example ''; }; }; }); description = ''  will be available under exampleOption.. ''; }; }; }; ... Then the enable option can be set for several exampleService services using e.g.:\nservices.exampleService.exampleOption.first.enable = true; services.exampleService.exampleOption.second.enable = true; services.exampleService.exampleOption.third.enable = false; Later on in the config part of the module, the  under exampleOption has to be retrieved somehow. This is also the point, where I asked for help on the NixOS discourse and while I still haven’t totally wrapped my head around, it is possible to do so by accessing cfg.exampleOption (in our example) and then using something like this to apply the value somehow:\nservices = fold (a: b: a // b) { } (flip mapAttrsToList cfg.exampleOption (serviceName: nestedOptions: serviceName = nestedOptions.enable; )); # or services = builtins.mapAttrs (serviceName: nestedOptions: { serviceName = nestedOptions.enable; }) cfg.networks; All in all I finally ended up with this code for the Module:\n{ config, lib, pkgs, ... }: with lib; let cfg = config.services.tincDifferent; in { options = { services.tincDifferent = { networks = mkOption { default = { }; type = with types; attrsOf (submodule { options = { nodeName = mkOption { default = null; type = types.nullOr types.str; description = '' Name of the Node in the tinc network. ''; }; port = mkOption { default = 655; type = types.int; description = '' TCP / UDP port used byt the tinc network (The Port has to be supplied in the node configuration as well, since the original tinc module takes the Port from there). ''; }; ipv4Address = mkOption { default = null; type = types.nullOr types.str; description = '' IPv4 Address of the machine on the tinc network. ''; example = \"10.0.0.1\"; }; ipv4Prefix = mkOption { default = null; type = types.nullOr types.int; description = '' IPv4 Prefix of the machine on the tinc network. ''; example = 24; }; }; }); description = '' Defines the tinc networks which will be started. Each network invokes a different daemon. ''; }; }; }; config = { networking.firewall = fold (a: b: a // b) { } (flip mapAttrsToList cfg.networks (network: data: { allowedTCPPorts = [ data.port ]; allowedUDPPorts = [ data.port ]; } )); services.tinc.networks = builtins.mapAttrs (network: data: { name = data.nodeName; hosts = let files = builtins.readDir (\"/etc/nixos/vpn/tinc/\" + network); filenames = builtins.attrNames files; filepaths = map (x: \"/etc/nixos/vpn/tinc/\" + network + \"/\" + x) filenames; filecontents = map builtins.readFile filepaths; jsondata = map (x: builtins.fromJSON x) filecontents; attrsetdata = builtins.listToAttrs jsondata; in attrsetdata; }) cfg.networks; networking.interfaces = fold (a: b: a // b) { } (flip mapAttrsToList cfg.networks (network: data: { \"tinc.${network}\".ipv4.addresses = [ { address = data.ipv4Address; prefixLength = data.ipv4Prefix; } ]; } )); }; } Using this module, I can now create networks using only a few lines. The following would for example create two tinc networks, called 0 and 1, with their configuration files located in /etc/nixos/vpn/tinc/0 respectively /etc/nixos/vpn/tinc/1:\n{ config, lib, pkgs, ... }: { imports = [ ./modules/tincDifferent.nix ]; services.tincDifferent.networks.0.nodeName = \"node0\"; services.tincDifferent.networks.0.ipv4Address = \"10.0.0.1\"; services.tincDifferent.networks.0.ipv4Prefix = 24; services.tincDifferent.networks.0.port = 655; services.tincDifferent.networks.1.nodeName = \"node0\"; services.tincDifferent.networks.1.ipv4Address = \"10.0.1.2\"; services.tincDifferent.networks.1.ipv4Prefix = 24; services.tincDifferent.networks.1.port = 656; } Improving the Module - Switching from JSON to nix At this point let’s take a minute and recap a little: Initially we started out with a normal tinc configuration on NixOS. Next we started using the builtins.readfile function in order to read in the config of the VPN nodes from files (instead of putting everything tinc-specific into the nix configuration). This resulted in a way shorter and more readable configuration.\nThen we switched from explicitly defining nodes to reading in all configuration files inside a directory. While this added a bunch of lines to the configuration, it also solves the problem of having to manually change the configs of every node whenever a node is added or removed from a network. The distribution itself is at this point still up to the user, but there are numerous ways to take care of that problem, e.g. git, git-annex or syncthing.\nFinally we created a Module, which enabled us to configure not only a single but multiple networks with only a few little lines of code.\nIf you remember my last post, then you may also remember that in the example from last time, one of the nodes shared a local subnet with the rest of the network.\nSharing the subnet of a node using the module from above would still require every node to set up the subnet explicitly, resulting in losing the benefit of not having to rewrite the configuration of every node on the network, so in order to keep that advantage, the information has to be shared together with the rest of a nodes configuration.\nThe JSON file our module is using contains a name-value pair, that is used by the builtins.listToAttrs function in order to construct the hosts attrset and as far as I understand it, due to this, the JSON file does not support any additional content. So I switched from using JSON to plain nix to configure a node:\n$ bat /etc/nixos/vpn/tinc/example/node0.json ───────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │ File: /etc/nixos/vpn/tinc/example/node0.json ───────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 1 │ { 2 │ \"name\" : \"node0\", 3 │ \"value\" : \"Subnet = 10.0.0.0\\nPort = 655\\nEd25519PublicKey = ...\\n-----BEGIN RSA PUBLIC KEY-----\\n...\\n-----END RSA PUBLIC KEY-----\" 4 │ } ───────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── $ bat /etc/nixos/vpn/tinc/example-nix/node0.nix ───────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │ File: /etc/nixos/vpn/tinc/example-nix/node0.nix ───────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 1 │ { 2 │ tinc = { 3 │ name = \"node0\"; 4 │ config = '' 5 │ Subnet = 10.0.0.0 6 │ Port = 655 7 │ Ed25519PublicKey = ... 8 │ -----BEGIN RSA PUBLIC KEY----- │ ... 20 │ -----END RSA PUBLIC KEY----- 21 │ ''; 22 │ }; 23 │ } ───────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Now when using nix files, the import (not imports) function can be used in order to read in a nix file and sections of that file, such as e.g. tinc in the example above can be directly accessed:\n$ nix repl Welcome to Nix version 2.3.10. Type :? for help. nix-repl import ./node0.nix { tinc = { ... }; } nix-repl (import ./node0.nix).tinc { config = \"Subnet = 10.0.0.0\\nPort = 655\\nEd25519PublicKey = ...\\n-----BEGIN RSA PUBLIC KEY-----\\n...\\n-----END RSA PUBLIC KEY-----\\n\"; name = \"node0\"; } This makes it really easy to change the section of our module, which sets up the tinc nodes to accept nix files instead of JSON files:\n# from this: services.tinc.networks = builtins.mapAttrs (network: data: { name = data.nodeName; hosts = let files = builtins.readDir (\"/etc/nixos/vpn/tinc/\" + network); filenames = builtins.attrNames files; filepaths = map (x: \"/etc/nixos/vpn/tinc/\" + network + \"/\" + x) filenames; filecontents = map builtins.readFile filepaths; jsondata = map (x: builtins.fromJSON x) filecontents; attrsetdata = builtins.listToAttrs jsondata; in attrsetdata; }) cfg.networks; # to this: services.tinc.networks = builtins.mapAttrs (network: data: { name = data.nodeName; hosts = let files = map (x: \"/etc/nixos/vpn/tinc/\" + network + \"/\" + x) (builtins.attrNames (builtins.readDir (\"/etc/nixos/vpn/tinc/\" + network +\"/\"))); ## CHECK!! use builtins.readFile before import and check if we notice changes on rebuilds! attrsetdata = builtins.listToAttrs (map (x: lib.nameValuePair x.name x.config) (map (x: (import x).tinc) files)); in attrsetdata; }) cfg.networks; (Note the comment, I’m not really sure if NixOS picks up on changed files, when using import as opposed to =builtins.readFile, guess I’ll have to check that out at some point..)\nWe first create a list called files that contains the absolute path to every file inside our vpn directory, and then create the hosts attrset by importing the tinc section of these files.\nNow in order add in node-specific options such as sharing a subnet, we can simply add in additional subsections on a nodes configuration, e.g. something like this in order to support ipv4 routes:\n{ tinc = { name = \"node0\"; config = '' Address = 192.168.0.1 Subnet = 10.0.0.0 Subnet = 192.168.0.0/24 Ed25519PublicKey = ... -----BEGIN RSA PUBLIC KEY----- ... -----END RSA PUBLIC KEY----- ''; }; routes = { ipv4 = [ { address = \"192.168.0.0\"; prefixLength = 24; via = \"10.0.0.0\"; } ]; ipv6 = []; }; } Note that also let can be used to make sure these files become somewhat copy-paste-able:\nlet cfg = { ipv4 = \"10.0.0.0\"; routes = { ipv4 = { subnet = \"192.168.0.0\"; prefix = 24; }; }; }; in { tinc = { name = \"node0\"; config = '' Address = 192.168.0.1 Subnet = ${cfg.ipv4}Subnet = ${cfg.routes.ipv4.subnet}/${cfg.routes.ipv4.subnet}Ed25519PublicKey = ... -----BEGIN RSA PUBLIC KEY----- ... -----END RSA PUBLIC KEY----- ''; }; routes = { ipv4 = [ { address = \"${cfg.routes.ipv4.subnet}\"; prefixLength = ${cfg.routes.ipv4.prefix}; via = \"${cfg.ipv4}\"; } ]; ipv6 = []; }; } The new route section can then be added to the module using something like this:\n# from this: networking.interfaces = fold (a: b: a // b) { } (flip mapAttrsToList cfg.networks (network: data: { \"tinc.${network}\".ipv4.addresses = [ { address = data.ipv4Address; prefixLength = data.ipv4Prefix; } ]; } )); # to this: networking.interfaces = fold (a: b: a // b) { } (flip mapAttrsToList cfg.networks (network: data: { \"tinc.${network}\".ipv4 = { addresses = [ { address = data.ipv4Address; prefixLength = data.ipv4Prefix; } ]; routes = let files = map (x: \"/etc/nixos/vpn/tinc/\" + network + \"/\" + x) (builtins.attrNames (builtins.readDir (\"/etc/nixos/vpn/tinc/\" + network +\"/\"))); routes = builtins.concatLists (map (x: x.ipv4) (map (x: (import x).routes) files)); in routes;  }; } )); At this point the whole module - for now only supporting additional IPv4 routes - looks like this:\n{ config, lib, pkgs, ... }: with lib; let cfg = config.services.tincDifferent; in { options = { services.tincDifferent = { networks = mkOption { default = { }; type = with types; attrsOf (submodule { options = { nodeName = mkOption { default = null; type = types.nullOr types.str; description = '' Name of the Node in the tinc network. ''; }; port = mkOption { default = 655; type = types.int; description = '' TCP / UDP port used byt the tinc network (The Port has to be supplied in the node configuration as well, since the original tinc module takes the Port from there). ''; }; ipv4Address = mkOption { default = null; type = types.nullOr types.str; description = '' IPv4 Address of the machine on the tinc network. ''; example = \"10.0.0.1\"; }; ipv4Prefix = mkOption { default = null; type = types.nullOr types.int; description = '' IPv4 Prefix of the machine on the tinc network. ''; example = 24; }; }; }); description = '' Defines the tinc networks which will be started. Each network invokes a different daemon. ''; }; }; }; config = { networking.firewall = fold (a: b: a // b) { } (flip mapAttrsToList cfg.networks (network: data: { allowedTCPPorts = [ data.port ]; allowedUDPPorts = [ data.port ]; } )); services.tinc.networks = builtins.mapAttrs (network: data: { name = data.nodeName; hosts = let files = map (x: \"/etc/nixos/vpn/tinc/\" + network + \"/\" + x) (builtins.attrNames (builtins.readDir (\"/etc/nixos/vpn/tinc/\" + network +\"/\"))); ## CHECK!! use builtins.readFile before import and check if we notice changes on rebuilds! attrsetdata = builtins.listToAttrs (map (x: lib.nameValuePair x.name x.config) (map (x: (import x).tinc) files)); in attrsetdata; }) cfg.networks; networking.interfaces = fold (a: b: a // b) { } (flip mapAttrsToList cfg.networks (network: data: { \"tinc.${network}\".ipv4 = { addresses = [ { address = data.ipv4Address; prefixLength = data.ipv4Prefix; } ]; routes = let files = map (x: \"/etc/nixos/vpn/tinc/\" + network + \"/\" + x) (builtins.attrNames (builtins.readDir (\"/etc/nixos/vpn/tinc/\" + network +\"/\"))); routes = builtins.concatLists (map (x: x.ipv4) (map (x: (import x).routes) files)); in routes; }; } )); }; } And that is basically where I’m at for now.\nConclusion \u0026 Outlook In this post we started out with a bare tinc configuration on NixOS, refined it in order to add some readability and then created a Module in order to enable multiple tinc network configurations using only a few lines of code. Finally we added in the functionality of injecting node specific settings into the configuration.\nAs of now the module is still a bit of a half-baked affair, but I’m going to add in a bunch of things:\n the ability to define a path for the network config files IPv6 addresses and routes (not entirely sure if there is the possibility make both IPv4 and IPv6 optional but still require one of both using nix) DNS using either networking.extraHosts or something like dnsmasq most importantly I need to consider Trust: since any node is able to simply inject configuration options it makes sense to:  limit the options in some way that makes sense, e.g. using whitelisting for nodes that are allowed to make these kinds of changes only trust nodes which can prove that they are trustworthy, e.g. using gpg or minisign    Also flakes are the new shit apparently and from what I’ve seen so far I really should take a closer look at those and make this module a flake.\nFor now the tincDifferent module in it’s current state of incompleteness can be found on github, feel free to give it a spin.\nAnyways, that’s all for now, I’ll be back at some point in the (hopefully near) future, thanks for having me!\n","wordCount":"4237","inLanguage":"en","datePublished":"2021-04-12T00:00:00+02:00","dateModified":"2021-04-12T00:00:00+02:00","author":[{"@type":"Person","name":"oblivious observer"}],"mainEntityOfPage":{"@type":"WebPage","@id":"https://oblivious.observer/posts/tincdifferent-ii-tinc-nixos-module/"},"publisher":{"@type":"Organization","name":"oblivious observer","logo":{"@type":"ImageObject","url":"https://oblivious.observer/observer-16x16.png"}}}</script></head><body id=top><script>if(localStorage.getItem("pref-theme")==="dark"){document.body.classList.add('dark');}else if(localStorage.getItem("pref-theme")==="light"){document.body.classList.remove('dark')}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.body.classList.add('dark');}</script><noscript><style type=text/css>#theme-toggle,.top-link{display:none}@media(prefers-color-scheme:dark){:root{--theme: #1d1e20;--entry: #2e2e33;--primary: rgba(255, 255, 255, 0.84);--secondary: rgba(255, 255, 255, 0.56);--tertiary: rgba(255, 255, 255, 0.16);--content: rgba(255, 255, 255, 0.74);--hljs-bg: #2e2e33;--code-bg: #37383e;--border: #333}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><header class=header><nav class=nav><div class=logo><a href=https://oblivious.observer accesskey=h title="(Alt + H)"><img src=/observer-64x64.png alt=logo aria-label=logo height=35></a>
+<span class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></span></div><ul id=menu onscroll=menu_on_scroll()><li><a href=https://oblivious.observer/search/ title="search (Alt + /)" accesskey=/><span>search</span></a></li><li><a href=https://oblivious.observer/posts/ title=posts><span>posts</span></a></li><li><a href=https://oblivious.observer/archives/ title=archive><span>archive</span></a></li><li><a href=https://oblivious.observer/tags/ title=tags><span>tags</span></a></li><li><a href=https://oblivious.observer/index.html title=about><span>about</span></a></li><li><a href=https://oblivious.observer/index.xml title=rss><span>rss</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><h1 class=post-title>Tinc different! - Part II: The Two Tunnels</h1><div class=post-meta>April 12, 2021&nbsp;·&nbsp;20 min&nbsp;·&nbsp;oblivious observer</div></header><div class=toc><details><summary accesskey=c title="(Alt + C)"><div class=details>Table of Contents</div></summary><div class=inner><ul><li><a href=#introduction-and-recap aria-label="Introduction and Recap">Introduction and Recap</a></li><li><a href=#builtins-dot-readfile-to-the-rescue aria-label="builtins.readfile to the rescue"><code>builtins.readfile</code> to the rescue</a></li><li><a href=#using-let aria-label="Using let">Using <code>let</code></a></li><li><a href=#reading-all-files-from-a-directory aria-label="Reading all files from a directory">Reading all files from a directory</a></li><li><a href=#creating-a-module aria-label="Creating a Module">Creating a Module</a></li><li><a href=#improving-the-module-switching-from-json-to-nix aria-label="Improving the Module - Switching from JSON to nix">Improving the Module - Switching from JSON to nix</a></li><li><a href=#conclusion-and-outlook aria-label="Conclusion &amp;amp; Outlook">Conclusion & Outlook</a></li></ul></div></details></div><div class=post-content><p>This is the second part of my little series about <code>tinc</code> and NixOS, where I
+<a href=https://oblivious.observer/posts/tincdifferent-i-tinc-nixos/>first shortly introduced</a> <code>tinc</code> and then explained how to set it up on Linux in
+general as well as on NixOS. This part is more or less a rewrite of a <a href=https://discourse.nixos.org/t/help-with-writing-a-nixos-module/11685>question</a> I
+posted to the NixOS discourse a while ago.</p><p>For a while I&rsquo;ve been using <code>tinc</code> on a bunch of infrastructure and so far it&rsquo;s
+basically been rock solid: once set up nodes anywhere simply join their network
+and become reachable for anyone who needs to access them. The one downside I
+noticed was the fact that at some point maintaining and updating the node
+configurations became increasingly cumbersome and at some point I ended up with
+my laptop connected to two different VPN networks (or tunnels - hence the title)
+consisting of all in all almost 30 nodes.</p><p>As a result of <code>tinc</code> providing its so far excellent service, the powers that be
+handed me the exiting quest of scaling up the existing networks as well as
+adding a whole bunch of new networks to the growing mass of configuration I already
+had lying around. This is the tale of how I battled a bunch of long and
+confusing configuration files and <del>wrote</del> <a href=https://en.wikipedia.org/wiki/Cargo%5Fcult>cargo culted</a> my first NixOS module in
+the process, enjoy..</p><h2 id=introduction-and-recap>Introduction and Recap<a hidden class=anchor aria-hidden=true href=#introduction-and-recap>#</a></h2><p>While I&rsquo;ve found that using NixOS usually results in a whole lot less (and all
+in all an usually different) kind of headaches than running infrastructure on
+any other Linux distribution, I quickly came to a point, where I wasn&rsquo;t really
+happy with the way the <code>tinc</code> configurations looked. As a quick recap, here is
+an example configuration for a small <code>tinc</code> network:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{ config<span style=color:#ff79c6>,</span> lib<span style=color:#ff79c6>,</span> pkgs<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...</span> }:
+
+{
+  networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedTCPPorts <span style=color:#ff79c6>=</span> [ <span style=color:#bd93f9>655</span> ];
+  networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedUDPPorts <span style=color:#ff79c6>=</span> [ <span style=color:#bd93f9>655</span> ];
+
+  networking<span style=color:#ff79c6>.</span>interfaces<span style=color:#ff79c6>.</span><span style=color:#f1fa8c>&#34;tinc.example&#34;</span><span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>addresses <span style=color:#ff79c6>=</span> [
+    { address <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.0&#34;</span>; prefixLength <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>; } ];
+
+  services<span style=color:#ff79c6>.</span>tinc<span style=color:#ff79c6>.</span>networks <span style=color:#ff79c6>=</span> {
+    example <span style=color:#ff79c6>=</span> {
+      name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+      hosts <span style=color:#ff79c6>=</span> {
+        node0 <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>          Address = 192.168.122.1
+</span><span style=color:#f1fa8c>          Subnet = 10.0.0.0
+</span><span style=color:#f1fa8c>          Subnet = 192.168.0.0/24
+</span><span style=color:#f1fa8c>          Ed25519PublicKey = ...
+</span><span style=color:#f1fa8c>          -----BEGIN RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>          ...
+</span><span style=color:#f1fa8c>          -----END RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>        &#39;&#39;</span>;
+        node1 <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>          Subnet = 10.0.0.1
+</span><span style=color:#f1fa8c>          Port = 655
+</span><span style=color:#f1fa8c>          Ed25519PublicKey = ...
+</span><span style=color:#f1fa8c>          -----BEGIN RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>          ...
+</span><span style=color:#f1fa8c>          -----END RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>        &#39;&#39;</span>;
+        node2 <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>          Address = 192.168.122.3
+</span><span style=color:#f1fa8c>          Subnet = 10.0.0.2
+</span><span style=color:#f1fa8c>          Ed25519PublicKey = ...
+</span><span style=color:#f1fa8c>          -----BEGIN RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>          ...
+</span><span style=color:#f1fa8c>          -----END RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>        &#39;&#39;</span>;
+
+        <span style=color:#ff79c6>...</span>  <span style=color:#6272a4># more nodes</span>
+
+      };
+    };
+  };
+}
+</code></pre></div><p>Initially a port (655) is opened on the firewall, then the network interface
+<code>tinc</code> expects for the network called <code>example</code> (<code>tinc.example</code>) is created and
+assigned an IP address. Then the <code>name</code> of the node is defined and finally the
+<code>hosts</code> is filled with some / all other nodes configuration information of the
+<code>example</code> network (as well as the one of the local node).</p><p>Using this way of setting up <code>tinc</code> networks for some time, I noticed two things:</p><ol><li>My config files grew into an unmaintainable mess as the number of hosts
+inside the VPNs increased</li><li>Since <code>tinc</code> is a mesh VPN it is a nice Idea to deploy the keys of all
+participating nodes to all participating nodes, but doing this inside the
+configuration means that increasing the number of nodes inside a network
+results in the need to change the configuration of all other nodes in the
+network (However at this point I should clarify: adding the node to any
+reachable other nodes configuration and rebuilding it is sufficient for a new
+node to join the network)</li></ol><p>While the first thing is just a bit confusing, it also feels like it is some
+sort of a future accident or outage waiting to happen and especially the latter
+one felt kind of important to set up, but was at the same time something my lazy
+self never really got around to do.</p><h2 id=builtins-dot-readfile-to-the-rescue><code>builtins.readfile</code> to the rescue<a hidden class=anchor aria-hidden=true href=#builtins-dot-readfile-to-the-rescue>#</a></h2><p>Initially I looked into how to make configuration files shorter and at some
+point I stumbled over <code>builtins.readFile</code>, which you can use to read in
+configuration bits and pieces from files. Instead of having all the node
+configurations lying around somewhere inside my config, I could create a per
+node configuration file containing something like this:</p><pre><code class=language-conf data-lang=conf>Address = 192.168.122.1
+Subnet = 10.0.0.1
+Subnet = 192.168.0.0/24
+Ed25519PublicKey = ...
+-----BEGIN RSA PUBLIC KEY-----
+...
+-----END RSA PUBLIC KEY-----
+</code></pre><p>Then using <code>builtin.readfiles</code> inside the configuration everything immediately
+becomes much more readable:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{ config<span style=color:#ff79c6>,</span> lib<span style=color:#ff79c6>,</span> pkgs<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...</span> }:
+
+{
+  networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedTCPPorts <span style=color:#ff79c6>=</span> [ <span style=color:#bd93f9>655</span> ];
+  networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedUDPPorts <span style=color:#ff79c6>=</span> [ <span style=color:#bd93f9>655</span> ];
+
+  networking<span style=color:#ff79c6>.</span>interfaces<span style=color:#ff79c6>.</span><span style=color:#f1fa8c>&#34;tinc.example&#34;</span><span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>addresses <span style=color:#ff79c6>=</span> [
+    { address <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.1&#34;</span>; prefixLength <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>; }
+  ];
+
+  services<span style=color:#ff79c6>.</span>tinc<span style=color:#ff79c6>.</span>networks <span style=color:#ff79c6>=</span> {
+    example <span style=color:#ff79c6>=</span> {
+      name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+      hosts <span style=color:#ff79c6>=</span> {
+<span style=display:block;width:100%;background-color:#3d3f4a>        node0 <span style=color:#ff79c6>=</span> (builtin<span style=color:#ff79c6>.</span>readFile <span style=color:#f1fa8c>/path/to/node0-config</span>);
+</span><span style=display:block;width:100%;background-color:#3d3f4a>        node1 <span style=color:#ff79c6>=</span> (builtin<span style=color:#ff79c6>.</span>readFile <span style=color:#f1fa8c>/path/to/node1-config</span>);
+</span><span style=display:block;width:100%;background-color:#3d3f4a>        node2 <span style=color:#ff79c6>=</span> (builtin<span style=color:#ff79c6>.</span>readFile <span style=color:#f1fa8c>/path/to/node2-config</span>);
+</span>      };
+    };
+  };
+}</code></pre></div><h2 id=using-let>Using <code>let</code><a hidden class=anchor aria-hidden=true href=#using-let>#</a></h2><p>The next thing to do was to look at everything and try to make my code a bit
+more generic, so I initially started out using the <code>let</code> statement in order to
+make replacing a bunch of values inside a <code>tinc</code> configuration easier by at least spatially grouping them together:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{ config<span style=color:#ff79c6>,</span> lib<span style=color:#ff79c6>,</span> pkgs<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...</span> }:
+<span style=display:block;width:100%;background-color:#3d3f4a><span style=color:#ff79c6>let</span>
+</span><span style=display:block;width:100%;background-color:#3d3f4a>
+</span><span style=display:block;width:100%;background-color:#3d3f4a>  node_name    <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>  vpn_name     <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;example&#34;</span>;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>  port         <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>655</span>;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>  ipv4_address <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.1&#34;</span>;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>  ipv4_prefix  <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>
+</span><span style=display:block;width:100%;background-color:#3d3f4a><span style=color:#ff79c6>in</span>
+</span>{
+
+<span style=display:block;width:100%;background-color:#3d3f4a>  networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedTCPPorts <span style=color:#ff79c6>=</span> [ port ];
+</span><span style=display:block;width:100%;background-color:#3d3f4a>  networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedUDPPorts <span style=color:#ff79c6>=</span> [ port ];
+</span>
+<span style=display:block;width:100%;background-color:#3d3f4a>  networking<span style=color:#ff79c6>.</span>interfaces<span style=color:#ff79c6>.</span>(<span style=color:#f1fa8c>&#34;tinc.&#34;</span> <span style=color:#ff79c6>+</span> vpn_name)<span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>addresses <span style=color:#ff79c6>=</span> [
+</span><span style=display:block;width:100%;background-color:#3d3f4a>    { address      <span style=color:#ff79c6>=</span> ipv4_address; prefixLength <span style=color:#ff79c6>=</span> ipv4_prefix; }
+</span>  ];
+
+  services<span style=color:#ff79c6>.</span>tinc<span style=color:#ff79c6>.</span>networks <span style=color:#ff79c6>=</span> {
+    example <span style=color:#ff79c6>=</span> {
+      name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+      hosts <span style=color:#ff79c6>=</span> {
+        node0 <span style=color:#ff79c6>=</span> (builtin<span style=color:#ff79c6>.</span>readFile <span style=color:#f1fa8c>/path/to/node0-config</span>);
+        node1 <span style=color:#ff79c6>=</span> (builtin<span style=color:#ff79c6>.</span>readFile <span style=color:#f1fa8c>/path/to/node1-config</span>);
+        node2 <span style=color:#ff79c6>=</span> (builtin<span style=color:#ff79c6>.</span>readFile <span style=color:#f1fa8c>/path/to/node2-config</span>);
+      };
+    };
+  };
+
+}</code></pre></div><p>Great! At this point a new network can be set up by easily copying the above
+code from another network configuration, then changing 5 lines at the top and
+finally explicitly defining each node inside the network inside <code>hosts</code>.</p><h2 id=reading-all-files-from-a-directory>Reading all files from a directory<a hidden class=anchor aria-hidden=true href=#reading-all-files-from-a-directory>#</a></h2><p>At this point I decided to switch from defining every single host inside the
+configuration to simply adding the hosts configurations from a directory.</p><p>I basically started a <code>nix repl</code> and begun writing some code until everything
+looked like it could work inside my configuration, then I pasted whatever I had
+into a config file and hoped <code>nixos-rebuild switch</code> wouldn&rsquo;t throw any errors.
+This is probably not the best way to develop <code>nix</code> files, but having the <code>repl</code>
+to quickly try out a bunch of nix lines was a definite step up from just working
+inside the configuration files.</p><p>The only thing that was a bit frustrating was the fact that <code>nix</code> is really lazy
+and quickly stops evaluating things, so you frequently end up with something
+like this:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>$ nix repl
+Welcome to Nix version <span style=color:#bd93f9>2</span><span style=color:#bd93f9>.3.10</span><span style=color:#ff79c6>.</span> Type :<span style=color:#ff79c6>?</span> for help<span style=color:#ff79c6>.</span>
+
+nix-repl<span style=color:#ff79c6>&gt;</span> a = [ <span style=color:#bd93f9>1</span> <span style=color:#bd93f9>2</span> <span style=color:#bd93f9>3</span> <span style=color:#bd93f9>4</span> ]
+
+nix-repl<span style=color:#ff79c6>&gt;</span> b = [ <span style=color:#bd93f9>5</span> <span style=color:#bd93f9>6</span> <span style=color:#bd93f9>7</span> <span style=color:#bd93f9>8</span> ]
+
+nix-repl<span style=color:#ff79c6>&gt;</span> c = [ a b ]
+
+nix-repl<span style=color:#ff79c6>&gt;</span> c
+[ [ <span style=color:#ff79c6>...</span> ] [ <span style=color:#ff79c6>...</span> ] ]
+</code></pre></div><p>On the other hand it&rsquo;s really great to have things like <code>:t</code> in order to find
+out what type a value has:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>nix-repl<span style=color:#ff79c6>&gt;</span> :t c
+a list
+
+nix-repl<span style=color:#ff79c6>&gt;</span> :t <span style=color:#bd93f9>1</span>
+an integer
+
+nix-repl<span style=color:#ff79c6>&gt;</span> :t <span style=color:#f1fa8c>&#34;definitely not a string :)&#34;</span>
+a string
+
+nix-repl<span style=color:#ff79c6>&gt;</span> :t {}
+a set
+</code></pre></div><p>Initially I wanted to read in every file from some directory and then fill up
+<code>services.tinc.network.&lt;name>.hosts</code> with key-value pairs created from the files
+name and content. Later on however I noticed that <code>hosts</code> is an attrset and
+due to that discarded the idea. Instead I simply created a filled attrset that I then supplied to
+<code>hosts</code>. In order to do that, I switched from keeping the nodes config in
+regular files to using JSON:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ tree /etc/nixos/vpn/tinc/example
+/etc/nixos/vpn/tinc/example
+├── node0.json
+├── node1.json
+└── node2.json
+$ bat /etc/nixos/vpn/tinc/example/node0.json
+───────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: /etc/nixos/vpn/tinc/example/node0.json
+───────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   <span style=color:#bd93f9>1</span>   │ <span style=color:#ff79c6>{</span>
+   <span style=color:#bd93f9>2</span>   │   <span style=color:#f1fa8c>&#34;name&#34;</span> : <span style=color:#f1fa8c>&#34;node0&#34;</span>,
+   <span style=color:#bd93f9>3</span>   │   <span style=color:#f1fa8c>&#34;value&#34;</span> : <span style=color:#f1fa8c>&#34;Subnet = 10.0.0.0\nPort = 655\nEd25519PublicKey = ...\n-----BEGIN RSA PUBLIC KEY-----\n...\n-----END RSA PUBLIC KEY-----&#34;</span>
+   <span style=color:#bd93f9>4</span>   │ <span style=color:#ff79c6>}</span>
+───────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+</code></pre></div><p>After a bit of trial and error, as well the revelation of <code>nix</code> not having
+loops, I arrived at the following code:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>    { config<span style=color:#ff79c6>,</span> lib<span style=color:#ff79c6>,</span> pkgs<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...</span> }:
+
+    <span style=color:#ff79c6>let</span>
+
+      node_name    <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+      vpn_name     <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;example&#34;</span>;
+      port     <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>655</span>;
+      ipv4_address <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.0&#34;</span>;
+      ipv4_prefix  <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>;
+
+    <span style=color:#ff79c6>in</span>
+    {
+
+      networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedTCPPorts <span style=color:#ff79c6>=</span> [ port ];
+      networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedUDPPorts <span style=color:#ff79c6>=</span> [ port ];
+
+      networking<span style=color:#ff79c6>.</span>interfaces<span style=color:#ff79c6>.</span>(<span style=color:#f1fa8c>&#34;tinc.&#34;</span> <span style=color:#ff79c6>+</span> vpn_name)<span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>addresses <span style=color:#ff79c6>=</span> [
+        { address      <span style=color:#ff79c6>=</span> ipv4_address; prefixLength <span style=color:#ff79c6>=</span> ipv4_prefix; }
+      ];
+
+      services<span style=color:#ff79c6>.</span>tinc<span style=color:#ff79c6>.</span>networks <span style=color:#ff79c6>=</span> {
+        mcrn0 <span style=color:#ff79c6>=</span> {
+          name <span style=color:#ff79c6>=</span> node_name;
+<span style=display:block;width:100%;background-color:#3d3f4a>          hosts <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>let</span>
+</span><span style=display:block;width:100%;background-color:#3d3f4a>            files        <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readDir (<span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> vpn_name);
+</span><span style=display:block;width:100%;background-color:#3d3f4a>            filenames    <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>attrNames files;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>            filepaths    <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> vpn_name <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;/&#34;</span> <span style=color:#ff79c6>+</span> x) filenames;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>            filecontents <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readFile filepaths;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>            jsondata     <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>fromJSON x) filecontents;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>            attrsetdata  <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>listToAttrs jsondata;
+</span><span style=display:block;width:100%;background-color:#3d3f4a>          <span style=color:#ff79c6>in</span> attrsetdata;
+</span>        };
+      };
+
+    }</code></pre></div><p>Now a <code>tinc</code> network can be created by changing 5 lines and supplying a folder
+that contains the node configurations. This folder can also be shared between
+all nodes and adding a new node only requires a rebuild on at least one (better
+of course on every) other node of the network.</p><p>Managing multiple networks however still requires copying the file and creates
+duplicates of configuration code, which is another future accident waiting to
+happen.</p><h2 id=creating-a-module>Creating a Module<a hidden class=anchor aria-hidden=true href=#creating-a-module>#</a></h2><p>At this point I decided to look into Modules and decided to try and write my
+own. Initially I searched for some kind of tutorial on how to create a module in
+NixOS (especially writing one that is using the <code>&lt;name></code> feature was quite a bit
+confusing to be honest), but I didn&rsquo;t really find anything, so instead I decided
+to take a look at some existing modules and basically ended up copying and
+changing the <a href=https://github.com/NixOS/nixpkgs/blob/nixos-20.09/nixos/modules/services/networking/tinc.nix>original</a> <code>tinc</code> module. Initially I simply ripped out pretty much
+everything and set up some options I could use to verify if everything worked,
+namely I created a new network device with an IP address as well as an opened a
+port on the firewall. I started basically setting up the following options, but
+in a generic way:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedTCPPorts = [ port ];
+networking<span style=color:#ff79c6>.</span>firewall<span style=color:#ff79c6>.</span>allowedUDPPorts = [ port ];
+
+networking<span style=color:#ff79c6>.</span>interfaces<span style=color:#ff79c6>.</span>(<span style=color:#f1fa8c>&#34;tinc.&#34;</span> <span style=color:#ff79c6>+</span> vpn_name)<span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>addresses = [
+  { address      <span style=color:#ff79c6>=</span> ipv4_address; prefixLength <span style=color:#ff79c6>=</span> ipv4_prefix; }
+];
+</code></pre></div><p>Here is the code for this initial &ldquo;dumb&rdquo; version of the module:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{ config<span style=color:#ff79c6>,</span> lib<span style=color:#ff79c6>,</span> pkgs<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...</span> }:
+
+<span style=color:#ff79c6>with</span> lib;
+
+<span style=color:#ff79c6>let</span>
+
+  cfg <span style=color:#ff79c6>=</span> config<span style=color:#ff79c6>.</span>services<span style=color:#ff79c6>.</span>tincDifferent;
+
+<span style=color:#ff79c6>in</span>
+
+{
+
+  options <span style=color:#ff79c6>=</span> {
+
+    services<span style=color:#ff79c6>.</span>tincDifferent <span style=color:#ff79c6>=</span> {
+
+      networks <span style=color:#ff79c6>=</span> mkOption {
+        default <span style=color:#ff79c6>=</span> { };
+        type <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>with</span> types; attrsOf (submodule {
+          options <span style=color:#ff79c6>=</span> {
+
+            nodeName <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> null;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>nullOr types<span style=color:#ff79c6>.</span>str;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                Name of the Node in the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+            };
+
+            port <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>655</span>;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>int;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                TCP port of the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+            };
+
+            ipv4Address <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> null;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>nullOr types<span style=color:#ff79c6>.</span>str;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                IPv4 Address of the machine on the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+              example <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.1&#34;</span>;
+            };
+
+            ipv4Prefix <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> null;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>nullOr types<span style=color:#ff79c6>.</span>int;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                IPv4 Prefix of the machine on the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+              example <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>;
+            };
+
+          };
+        });
+
+        description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>          Defines the tinc networks which will be started.
+</span><span style=color:#f1fa8c>          Each network invokes a different daemon.
+</span><span style=color:#f1fa8c>        &#39;&#39;</span>;
+      };
+    };
+
+  };
+
+  config <span style=color:#ff79c6>=</span> {
+
+    networking<span style=color:#ff79c6>.</span>firewall <span style=color:#ff79c6>=</span> fold (a: b: a <span style=color:#ff79c6>//</span> b) { }
+      (flip mapAttrsToList cfg<span style=color:#ff79c6>.</span>networks (network: data:
+        {
+          allowedTCPPorts <span style=color:#ff79c6>=</span> [ data<span style=color:#ff79c6>.</span>port ];
+          allowedUDPPorts <span style=color:#ff79c6>=</span> [ data<span style=color:#ff79c6>.</span>port ];
+        }
+      ));
+
+    networking<span style=color:#ff79c6>.</span>interfaces <span style=color:#ff79c6>=</span> fold (a: b: a <span style=color:#ff79c6>//</span> b) { }
+      (flip mapAttrsToList cfg<span style=color:#ff79c6>.</span>networks (network: data:
+      {
+      <span style=color:#f1fa8c>&#34;tinc.</span><span style=color:#f1fa8c>${</span>network<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>&#34;</span><span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>addresses <span style=color:#ff79c6>=</span> [
+        {
+          address      <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Address;
+          prefixLength <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Prefix;
+        }
+      ];
+    }
+    ));
+
+  };
+}
+</code></pre></div><p>At this point I was able to check if everything worked by simply importing the
+module, filling out the options, then looking if there was a new network
+interface and checking for open ports using something like this:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{ config<span style=color:#ff79c6>,</span> lib<span style=color:#ff79c6>,</span> pkgs<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...</span> }:
+
+{
+  imports <span style=color:#ff79c6>=</span> [ <span style=color:#f1fa8c>./modules/tincDifferent.nix</span> ];
+
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#ff79c6>.</span>example<span style=color:#ff79c6>.</span>nodeName <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#ff79c6>.</span>example<span style=color:#ff79c6>.</span>ipv4Address <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.1&#34;</span>;
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#ff79c6>.</span>example<span style=color:#ff79c6>.</span>ipv4Prefix <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>;
+  <span style=color:#6272a4># Port 655 is a default value, but it could of course be defined like this:</span>
+  <span style=color:#6272a4># services.tincDifferent.networks.example.port = 655;</span>
+}
+</code></pre></div><p>Note that, the code above is using a nested (unnamed) option in order to create
+the generic <code>*.&lt;name>.*</code> functionality. If I understand correctly this can
+generally be achieved by doing something like this in the <code>options</code> part of the
+module:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix><span style=color:#ff79c6>...</span>
+options = {
+
+  services<span style=color:#ff79c6>.</span>exampleService <span style=color:#ff79c6>=</span> {
+
+    exampleOption <span style=color:#ff79c6>=</span> mkOption {
+      default <span style=color:#ff79c6>=</span> { };
+      type <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>with</span> types; attrsOf (submodule {
+        options <span style=color:#ff79c6>=</span> {
+
+          enable <span style=color:#ff79c6>=</span> mkOption {
+            default <span style=color:#ff79c6>=</span> false;
+            type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>bool;
+            description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>              just an example
+</span><span style=color:#f1fa8c>            &#39;&#39;</span>;
+          };
+
+        };
+      });
+
+      description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>        &lt;name&gt; will be available under exampleOption..
+</span><span style=color:#f1fa8c>      &#39;&#39;</span>;
+    };
+  };
+
+};
+<span style=color:#ff79c6>...</span>
+</code></pre></div><p>Then the <code>enable</code> option can be set for several exampleService services using
+e.g.:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>services<span style=color:#ff79c6>.</span>exampleService<span style=color:#ff79c6>.</span>exampleOption<span style=color:#ff79c6>.</span>first<span style=color:#ff79c6>.</span>enable  = true;
+services<span style=color:#ff79c6>.</span>exampleService<span style=color:#ff79c6>.</span>exampleOption<span style=color:#ff79c6>.</span>second<span style=color:#ff79c6>.</span>enable = true;
+services<span style=color:#ff79c6>.</span>exampleService<span style=color:#ff79c6>.</span>exampleOption<span style=color:#ff79c6>.</span>third<span style=color:#ff79c6>.</span>enable  = false;
+</code></pre></div><p>Later on in the <code>config</code> part of the module, the <code>&lt;name></code> under <code>exampleOption</code>
+has to be retrieved somehow. This is also the point, where I asked for help on
+the <a href=https://discourse.nixos.org/t/help-with-writing-a-nixos-module/11685>NixOS discourse</a> and while I still haven&rsquo;t totally wrapped my head around, it
+is possible to do so by accessing <code>cfg.exampleOption</code> (in our example) and then
+using something like this to apply the value somehow:</p><pre><code class=language-nil data-lang=nil>services = fold (a: b: a // b) { }
+  (flip mapAttrsToList cfg.exampleOption (serviceName: nestedOptions:
+    serviceName = nestedOptions.enable;
+  ));
+
+# or
+
+services = builtins.mapAttrs (serviceName: nestedOptions:
+  { serviceName = nestedOptions.enable; }) cfg.networks;
+</code></pre><p>All in all I finally ended up with this code for the Module:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{ config<span style=color:#ff79c6>,</span> lib<span style=color:#ff79c6>,</span> pkgs<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...</span> }:
+
+<span style=color:#ff79c6>with</span> lib;
+
+<span style=color:#ff79c6>let</span>
+
+  cfg <span style=color:#ff79c6>=</span> config<span style=color:#ff79c6>.</span>services<span style=color:#ff79c6>.</span>tincDifferent;
+
+<span style=color:#ff79c6>in</span>
+
+{
+
+  options <span style=color:#ff79c6>=</span> {
+
+    services<span style=color:#ff79c6>.</span>tincDifferent <span style=color:#ff79c6>=</span> {
+
+      networks <span style=color:#ff79c6>=</span> mkOption {
+        default <span style=color:#ff79c6>=</span> { };
+        type <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>with</span> types; attrsOf (submodule {
+          options <span style=color:#ff79c6>=</span> {
+
+            nodeName <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> null;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>nullOr types<span style=color:#ff79c6>.</span>str;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                Name of the Node in the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+            };
+
+            port <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>655</span>;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>int;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                TCP / UDP port used byt the tinc network (The Port has to be supplied in the node configuration as well, since the original tinc module takes the Port from there).
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+            };
+
+            ipv4Address <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> null;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>nullOr types<span style=color:#ff79c6>.</span>str;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                IPv4 Address of the machine on the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+              example <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.1&#34;</span>;
+            };
+
+            ipv4Prefix <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> null;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>nullOr types<span style=color:#ff79c6>.</span>int;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                IPv4 Prefix of the machine on the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+              example <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>;
+            };
+
+          };
+        });
+
+        description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>          Defines the tinc networks which will be started.
+</span><span style=color:#f1fa8c>          Each network invokes a different daemon.
+</span><span style=color:#f1fa8c>        &#39;&#39;</span>;
+      };
+    };
+
+  };
+
+  config <span style=color:#ff79c6>=</span> {
+
+    networking<span style=color:#ff79c6>.</span>firewall <span style=color:#ff79c6>=</span> fold (a: b: a <span style=color:#ff79c6>//</span> b) { }
+      (flip mapAttrsToList cfg<span style=color:#ff79c6>.</span>networks (network: data:
+        {
+          allowedTCPPorts <span style=color:#ff79c6>=</span> [ data<span style=color:#ff79c6>.</span>port ];
+          allowedUDPPorts <span style=color:#ff79c6>=</span> [ data<span style=color:#ff79c6>.</span>port ];
+        }
+      ));
+
+    services<span style=color:#ff79c6>.</span>tinc<span style=color:#ff79c6>.</span>networks <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>mapAttrs (network: data: {
+      name <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>nodeName;
+      hosts <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>let</span>
+        files        <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readDir (<span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network);
+        filenames    <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>attrNames files;
+        filepaths    <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;/&#34;</span> <span style=color:#ff79c6>+</span> x) filenames;
+        filecontents <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readFile filepaths;
+        jsondata     <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>fromJSON x) filecontents;
+        attrsetdata <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>listToAttrs jsondata;
+      <span style=color:#ff79c6>in</span> attrsetdata;
+    }) cfg<span style=color:#ff79c6>.</span>networks;
+
+    networking<span style=color:#ff79c6>.</span>interfaces <span style=color:#ff79c6>=</span> fold (a: b: a <span style=color:#ff79c6>//</span> b) { }
+      (flip mapAttrsToList cfg<span style=color:#ff79c6>.</span>networks (network: data:
+      {
+      <span style=color:#f1fa8c>&#34;tinc.</span><span style=color:#f1fa8c>${</span>network<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>&#34;</span><span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>addresses <span style=color:#ff79c6>=</span> [
+        {
+          address      <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Address;
+          prefixLength <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Prefix;
+        }
+      ];
+    }
+    ));
+
+  };
+}
+</code></pre></div><p>Using this module, I can now create networks using only a few lines. The
+following would for example create two tinc networks, called <code>0</code> and <code>1</code>, with
+their configuration files located in <code>/etc/nixos/vpn/tinc/0</code> respectively
+<code>/etc/nixos/vpn/tinc/1</code>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{ config<span style=color:#ff79c6>,</span> lib<span style=color:#ff79c6>,</span> pkgs<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...</span> }:
+
+{
+  imports <span style=color:#ff79c6>=</span> [ <span style=color:#f1fa8c>./modules/tincDifferent.nix</span> ];
+
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#bd93f9>.0</span><span style=color:#ff79c6>.</span>nodeName <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#bd93f9>.0</span><span style=color:#ff79c6>.</span>ipv4Address <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.1&#34;</span>;
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#bd93f9>.0</span><span style=color:#ff79c6>.</span>ipv4Prefix <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>;
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#bd93f9>.0</span><span style=color:#ff79c6>.</span>port <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>655</span>;
+
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#bd93f9>.1</span><span style=color:#ff79c6>.</span>nodeName <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#bd93f9>.1</span><span style=color:#ff79c6>.</span>ipv4Address <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.1.2&#34;</span>;
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#bd93f9>.1</span><span style=color:#ff79c6>.</span>ipv4Prefix <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>;
+  services<span style=color:#ff79c6>.</span>tincDifferent<span style=color:#ff79c6>.</span>networks<span style=color:#bd93f9>.1</span><span style=color:#ff79c6>.</span>port <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>656</span>;
+}
+</code></pre></div><h2 id=improving-the-module-switching-from-json-to-nix>Improving the Module - Switching from JSON to nix<a hidden class=anchor aria-hidden=true href=#improving-the-module-switching-from-json-to-nix>#</a></h2><p>At this point let&rsquo;s take a minute and recap a little: Initially we started out
+with a normal <code>tinc</code> configuration on NixOS. Next we started using the
+<code>builtins.readfile</code> function in order to read in the config of the VPN nodes
+from files (instead of putting everything tinc-specific into the nix
+configuration). This resulted in a way shorter and more readable configuration.</p><p>Then we switched from explicitly defining nodes to reading in all configuration
+files inside a directory. While this added a bunch of lines to the
+configuration, it also solves the problem of having to manually change the
+configs of every node whenever a node is added or removed from a network. The
+distribution itself is at this point still up to the user, but there are
+numerous ways to take care of that problem, e.g. <code>git</code>, <code>git-annex</code> or
+<code>syncthing</code>.</p><p>Finally we created a Module, which enabled us to configure not only a single but
+multiple networks with only a few little lines of code.</p><p>If you remember my <a href=https://oblivious.observer/posts/tincdifferent-i-tinc-nixos/>last post</a>, then you may also remember that in the example
+from last time, one of the nodes shared a local subnet with the rest of the
+network.</p><p>Sharing the subnet of a node using the module from above would still require
+every node to set up the subnet explicitly, resulting in losing the benefit of
+not having to rewrite the configuration of every node on the network, so in
+order to keep that advantage, the information has to be shared together with the
+rest of a nodes configuration.</p><p>The JSON file our module is using contains a name-value pair, that is used by
+the <code>builtins.listToAttrs</code> function in order to construct the <code>hosts</code> attrset
+and as far as I understand it, due to this, the JSON file does not support any
+additional content. So I switched from using <code>JSON</code> to plain <code>nix</code> to configure
+a node:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ bat /etc/nixos/vpn/tinc/example/node0.json
+───────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: /etc/nixos/vpn/tinc/example/node0.json
+───────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   <span style=color:#bd93f9>1</span>   │ <span style=color:#ff79c6>{</span>
+   <span style=color:#bd93f9>2</span>   │   <span style=color:#f1fa8c>&#34;name&#34;</span> : <span style=color:#f1fa8c>&#34;node0&#34;</span>,
+   <span style=color:#bd93f9>3</span>   │   <span style=color:#f1fa8c>&#34;value&#34;</span> : <span style=color:#f1fa8c>&#34;Subnet = 10.0.0.0\nPort = 655\nEd25519PublicKey = ...\n-----BEGIN RSA PUBLIC KEY-----\n...\n-----END RSA PUBLIC KEY-----&#34;</span>
+   <span style=color:#bd93f9>4</span>   │ <span style=color:#ff79c6>}</span>
+───────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+$ bat /etc/nixos/vpn/tinc/example-nix/node0.nix
+───────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: /etc/nixos/vpn/tinc/example-nix/node0.nix
+───────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   <span style=color:#bd93f9>1</span>   │ <span style=color:#ff79c6>{</span>
+   <span style=color:#bd93f9>2</span>   │   <span style=color:#8be9fd;font-style:italic>tinc</span> <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>{</span>
+   <span style=color:#bd93f9>3</span>   │     <span style=color:#8be9fd;font-style:italic>name</span>  <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+   <span style=color:#bd93f9>4</span>   │     <span style=color:#8be9fd;font-style:italic>config</span> <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;</span>
+   <span style=color:#bd93f9>5</span>   │       <span style=color:#8be9fd;font-style:italic>Subnet</span> <span style=color:#ff79c6>=</span> 10.0.0.0
+   <span style=color:#bd93f9>6</span>   │       <span style=color:#8be9fd;font-style:italic>Port</span> <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>655</span>
+   <span style=color:#bd93f9>7</span>   │       <span style=color:#8be9fd;font-style:italic>Ed25519PublicKey</span> <span style=color:#ff79c6>=</span> ...
+   <span style=color:#bd93f9>8</span>   │       -----BEGIN RSA PUBLIC KEY-----
+       │       ...
+  <span style=color:#bd93f9>20</span>   │       -----END RSA PUBLIC KEY-----
+  <span style=color:#bd93f9>21</span>   │     <span style=color:#f1fa8c>&#39;&#39;</span>;
+  <span style=color:#bd93f9>22</span>   │   <span style=color:#ff79c6>}</span>;
+  <span style=color:#bd93f9>23</span>   │ <span style=color:#ff79c6>}</span>
+───────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+</code></pre></div><p>Now when using nix files, the <code>import</code> (not <code>imports</code>) function can be used in
+order to read in a <code>nix</code> file and sections of that file, such as e.g. tinc in
+the example above can be directly accessed:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>$ nix repl
+Welcome to Nix version <span style=color:#bd93f9>2</span><span style=color:#bd93f9>.3.10</span><span style=color:#ff79c6>.</span> Type :<span style=color:#ff79c6>?</span> for help<span style=color:#ff79c6>.</span>
+
+nix-repl<span style=color:#ff79c6>&gt;</span> <span style=color:#ff79c6>import</span> <span style=color:#f1fa8c>./node0.nix</span>
+{ tinc <span style=color:#ff79c6>=</span> { <span style=color:#ff79c6>...</span> }; }
+
+nix-repl<span style=color:#ff79c6>&gt;</span> (<span style=color:#ff79c6>import</span> <span style=color:#f1fa8c>./node0.nix</span>)<span style=color:#ff79c6>.</span>tinc
+{ config <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;Subnet = 10.0.0.0</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>Port = 655</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>Ed25519PublicKey = ...</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>-----BEGIN RSA PUBLIC KEY-----</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>...</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>-----END RSA PUBLIC KEY-----</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#34;</span>; name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>; }
+</code></pre></div><p>This makes it really easy to change the section of our module, which sets up the
+<code>tinc</code> nodes to accept <code>nix</code> files instead of <code>JSON</code> files:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix><span style=color:#6272a4># from this:</span>
+services<span style=color:#ff79c6>.</span>tinc<span style=color:#ff79c6>.</span>networks = <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>mapAttrs (network: data: {
+  name <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>nodeName;
+  hosts <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>let</span>
+    files        <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readDir (<span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network);
+    filenames    <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>attrNames files;
+    filepaths    <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;/&#34;</span> <span style=color:#ff79c6>+</span> x) filenames;
+    filecontents <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readFile filepaths;
+    jsondata     <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>fromJSON x) filecontents;
+    attrsetdata <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>listToAttrs jsondata;
+  <span style=color:#ff79c6>in</span> attrsetdata;
+}) cfg<span style=color:#ff79c6>.</span>networks;
+
+<span style=color:#6272a4># to this:</span>
+services<span style=color:#ff79c6>.</span>tinc<span style=color:#ff79c6>.</span>networks = <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>mapAttrs (network: data: {
+  name <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>nodeName;
+  hosts <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>let</span>
+    files <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;/&#34;</span> <span style=color:#ff79c6>+</span> x) (<span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>attrNames (<span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readDir (<span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span><span style=color:#f1fa8c>&#34;/&#34;</span>)));
+    <span style=color:#6272a4>## CHECK!! use builtins.readFile before import and check if we notice changes on rebuilds!</span>
+    attrsetdata <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>listToAttrs (<span style=color:#8be9fd;font-style:italic>map</span> (x: lib<span style=color:#ff79c6>.</span>nameValuePair x<span style=color:#ff79c6>.</span>name x<span style=color:#ff79c6>.</span>config) (<span style=color:#8be9fd;font-style:italic>map</span> (x: (<span style=color:#ff79c6>import</span> x)<span style=color:#ff79c6>.</span>tinc) files));
+  <span style=color:#ff79c6>in</span> attrsetdata;
+}) cfg<span style=color:#ff79c6>.</span>networks;
+</code></pre></div><p>(Note the comment, I&rsquo;m not really sure if NixOS picks up on changed files, when
+using <code>import</code> as opposed to =builtins.readFile, guess I&rsquo;ll have to check that
+out at some point..)</p><p>We first create a list called <code>files</code> that contains the absolute path to every
+file inside our vpn directory, and then create the <code>hosts</code> attrset by importing
+the <code>tinc</code> section of these files.</p><p>Now in order add in node-specific options such as sharing a subnet, we can
+simply add in additional subsections on a nodes configuration, e.g. something
+like this in order to support ipv4 routes:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{
+  tinc <span style=color:#ff79c6>=</span> {
+    name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+    config <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>      Address = 192.168.0.1
+</span><span style=color:#f1fa8c>      Subnet = 10.0.0.0
+</span><span style=color:#f1fa8c>      Subnet = 192.168.0.0/24
+</span><span style=color:#f1fa8c>      Ed25519PublicKey = ...
+</span><span style=color:#f1fa8c>      -----BEGIN RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>      ...
+</span><span style=color:#f1fa8c>      -----END RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>    &#39;&#39;</span>;
+  };
+  routes <span style=color:#ff79c6>=</span> {
+    ipv4 <span style=color:#ff79c6>=</span> [
+      {
+        address      <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;192.168.0.0&#34;</span>;
+        prefixLength <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>;
+        via          <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.0&#34;</span>;
+      }
+    ];
+    ipv6 <span style=color:#ff79c6>=</span> [];
+  };
+}
+</code></pre></div><p>Note that also <code>let</code> can be used to make sure these files become somewhat
+copy-paste-able:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix><span style=color:#ff79c6>let</span>
+  cfg <span style=color:#ff79c6>=</span> {
+    ipv4 <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.0&#34;</span>;
+    routes <span style=color:#ff79c6>=</span> { ipv4 <span style=color:#ff79c6>=</span> { subnet <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;192.168.0.0&#34;</span>; prefix <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>; }; };
+  };
+<span style=color:#ff79c6>in</span>
+{
+  tinc <span style=color:#ff79c6>=</span> {
+    name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;node0&#34;</span>;
+    config <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>      Address = 192.168.0.1
+</span><span style=color:#f1fa8c>      Subnet = </span><span style=color:#f1fa8c>${</span>cfg<span style=color:#ff79c6>.</span>ipv4<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>
+</span><span style=color:#f1fa8c>      Subnet = </span><span style=color:#f1fa8c>${</span>cfg<span style=color:#ff79c6>.</span>routes<span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>subnet<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>/</span><span style=color:#f1fa8c>${</span>cfg<span style=color:#ff79c6>.</span>routes<span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>subnet<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>
+</span><span style=color:#f1fa8c>      Ed25519PublicKey = ...
+</span><span style=color:#f1fa8c>      -----BEGIN RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>      ...
+</span><span style=color:#f1fa8c>      -----END RSA PUBLIC KEY-----
+</span><span style=color:#f1fa8c>    &#39;&#39;</span>;
+  };
+  routes <span style=color:#ff79c6>=</span> {
+    ipv4 <span style=color:#ff79c6>=</span> [
+      {
+        address      <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${</span>cfg<span style=color:#ff79c6>.</span>routes<span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>subnet<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>&#34;</span>;
+        prefixLength <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>${</span>cfg<span style=color:#ff79c6>.</span>routes<span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>prefix<span style=color:#f1fa8c>}</span>;
+        via          <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${</span>cfg<span style=color:#ff79c6>.</span>ipv4<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>&#34;</span>;
+      }
+    ];
+    ipv6 <span style=color:#ff79c6>=</span> [];
+  };
+}
+</code></pre></div><p>The new route section can then be added to the module using something like this:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix><span style=color:#6272a4># from this:</span>
+networking<span style=color:#ff79c6>.</span>interfaces = fold (a: b: a <span style=color:#ff79c6>//</span> b) { }
+  (flip mapAttrsToList cfg<span style=color:#ff79c6>.</span>networks (network: data:
+    {
+    <span style=color:#f1fa8c>&#34;tinc.</span><span style=color:#f1fa8c>${</span>network<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>&#34;</span><span style=color:#ff79c6>.</span>ipv4<span style=color:#ff79c6>.</span>addresses <span style=color:#ff79c6>=</span> [
+      {
+        address      <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Address;
+        prefixLength <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Prefix;
+      }
+    ];
+  }
+));
+
+<span style=color:#6272a4># to this:</span>
+networking<span style=color:#ff79c6>.</span>interfaces = fold (a: b: a <span style=color:#ff79c6>//</span> b) { }
+  (flip mapAttrsToList cfg<span style=color:#ff79c6>.</span>networks (network: data:
+  {
+    <span style=color:#f1fa8c>&#34;tinc.</span><span style=color:#f1fa8c>${</span>network<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>&#34;</span><span style=color:#ff79c6>.</span>ipv4 <span style=color:#ff79c6>=</span> {
+      addresses <span style=color:#ff79c6>=</span> [
+        {
+          address      <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Address;
+          prefixLength <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Prefix;
+        }
+      ];
+<span style=display:block;width:100%;background-color:#3d3f4a>      routes <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>let</span>
+</span><span style=display:block;width:100%;background-color:#3d3f4a>        files <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;/&#34;</span> <span style=color:#ff79c6>+</span> x) (<span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>attrNames (<span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readDir (<span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span><span style=color:#f1fa8c>&#34;/&#34;</span>)));
+</span><span style=display:block;width:100%;background-color:#3d3f4a>        routes <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>concatLists (<span style=color:#8be9fd;font-style:italic>map</span> (x: x<span style=color:#ff79c6>.</span>ipv4) (<span style=color:#8be9fd;font-style:italic>map</span> (x: (<span style=color:#ff79c6>import</span> x)<span style=color:#ff79c6>.</span>routes) files));
+</span><span style=display:block;width:100%;background-color:#3d3f4a>      <span style=color:#ff79c6>in</span> routes;
+</span>    };
+  }
+));</code></pre></div><p>At this point the whole module - for now only supporting additional IPv4
+routes - looks like this:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-nix data-lang=nix>{ config<span style=color:#ff79c6>,</span> lib<span style=color:#ff79c6>,</span> pkgs<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...</span> }:
+
+<span style=color:#ff79c6>with</span> lib;
+
+<span style=color:#ff79c6>let</span>
+
+  cfg <span style=color:#ff79c6>=</span> config<span style=color:#ff79c6>.</span>services<span style=color:#ff79c6>.</span>tincDifferent;
+
+<span style=color:#ff79c6>in</span>
+
+{
+
+  options <span style=color:#ff79c6>=</span> {
+
+    services<span style=color:#ff79c6>.</span>tincDifferent <span style=color:#ff79c6>=</span> {
+
+      networks <span style=color:#ff79c6>=</span> mkOption {
+        default <span style=color:#ff79c6>=</span> { };
+        type <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>with</span> types; attrsOf (submodule {
+          options <span style=color:#ff79c6>=</span> {
+
+            nodeName <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> null;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>nullOr types<span style=color:#ff79c6>.</span>str;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                Name of the Node in the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+            };
+
+            port <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>655</span>;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>int;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                TCP / UDP port used byt the tinc network (The Port
+</span><span style=color:#f1fa8c>                has to be supplied in the node configuration as well,
+</span><span style=color:#f1fa8c>                since the original tinc module takes the Port from
+</span><span style=color:#f1fa8c>                there).
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+            };
+
+            ipv4Address <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> null;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>nullOr types<span style=color:#ff79c6>.</span>str;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                IPv4 Address of the machine on the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+              example <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;10.0.0.1&#34;</span>;
+            };
+
+            ipv4Prefix <span style=color:#ff79c6>=</span> mkOption {
+              default <span style=color:#ff79c6>=</span> null;
+              type <span style=color:#ff79c6>=</span> types<span style=color:#ff79c6>.</span>nullOr types<span style=color:#ff79c6>.</span>int;
+              description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>                IPv4 Prefix of the machine on the tinc network.
+</span><span style=color:#f1fa8c>              &#39;&#39;</span>;
+              example <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>24</span>;
+            };
+
+          };
+        });
+
+        description <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;&#39;
+</span><span style=color:#f1fa8c>          Defines the tinc networks which will be started.
+</span><span style=color:#f1fa8c>          Each network invokes a different daemon.
+</span><span style=color:#f1fa8c>        &#39;&#39;</span>;
+      };
+    };
+
+  };
+
+  config <span style=color:#ff79c6>=</span> {
+
+    networking<span style=color:#ff79c6>.</span>firewall <span style=color:#ff79c6>=</span> fold (a: b: a <span style=color:#ff79c6>//</span> b) { }
+      (flip mapAttrsToList cfg<span style=color:#ff79c6>.</span>networks (network: data:
+        {
+          allowedTCPPorts <span style=color:#ff79c6>=</span> [ data<span style=color:#ff79c6>.</span>port ];
+          allowedUDPPorts <span style=color:#ff79c6>=</span> [ data<span style=color:#ff79c6>.</span>port ];
+        }
+      ));
+
+    services<span style=color:#ff79c6>.</span>tinc<span style=color:#ff79c6>.</span>networks <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>mapAttrs (network: data: {
+      name <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>nodeName;
+      hosts <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>let</span>
+        files <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;/&#34;</span> <span style=color:#ff79c6>+</span> x) (<span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>attrNames (<span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readDir (<span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span><span style=color:#f1fa8c>&#34;/&#34;</span>)));
+        <span style=color:#6272a4>## CHECK!! use builtins.readFile before import and check if we notice changes on rebuilds!</span>
+        attrsetdata <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>listToAttrs (<span style=color:#8be9fd;font-style:italic>map</span> (x: lib<span style=color:#ff79c6>.</span>nameValuePair x<span style=color:#ff79c6>.</span>name x<span style=color:#ff79c6>.</span>config) (<span style=color:#8be9fd;font-style:italic>map</span> (x: (<span style=color:#ff79c6>import</span> x)<span style=color:#ff79c6>.</span>tinc) files));
+      <span style=color:#ff79c6>in</span> attrsetdata;
+    }) cfg<span style=color:#ff79c6>.</span>networks;
+
+    networking<span style=color:#ff79c6>.</span>interfaces <span style=color:#ff79c6>=</span> fold (a: b: a <span style=color:#ff79c6>//</span> b) { }
+      (flip mapAttrsToList cfg<span style=color:#ff79c6>.</span>networks (network: data:
+      {
+        <span style=color:#f1fa8c>&#34;tinc.</span><span style=color:#f1fa8c>${</span>network<span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>&#34;</span><span style=color:#ff79c6>.</span>ipv4 <span style=color:#ff79c6>=</span> {
+          addresses <span style=color:#ff79c6>=</span> [
+            {
+              address      <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Address;
+              prefixLength <span style=color:#ff79c6>=</span> data<span style=color:#ff79c6>.</span>ipv4Prefix;
+            }
+          ];
+          routes <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>let</span>
+            files <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>map</span> (x: <span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;/&#34;</span> <span style=color:#ff79c6>+</span> x) (<span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>attrNames (<span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>readDir (<span style=color:#f1fa8c>&#34;/etc/nixos/vpn/tinc/&#34;</span> <span style=color:#ff79c6>+</span> network <span style=color:#ff79c6>+</span><span style=color:#f1fa8c>&#34;/&#34;</span>)));
+            routes <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>builtins</span><span style=color:#ff79c6>.</span>concatLists (<span style=color:#8be9fd;font-style:italic>map</span> (x: x<span style=color:#ff79c6>.</span>ipv4) (<span style=color:#8be9fd;font-style:italic>map</span> (x: (<span style=color:#ff79c6>import</span> x)<span style=color:#ff79c6>.</span>routes) files));
+          <span style=color:#ff79c6>in</span> routes;
+        };
+      }
+    ));
+
+  };
+}
+</code></pre></div><p>And that is basically where I&rsquo;m at for now.</p><h2 id=conclusion-and-outlook>Conclusion & Outlook<a hidden class=anchor aria-hidden=true href=#conclusion-and-outlook>#</a></h2><p>In this post we started out with a bare <code>tinc</code> configuration on NixOS, refined
+it in order to add some readability and then created a Module in order to enable
+multiple <code>tinc</code> network configurations using only a few lines of code. Finally
+we added in the functionality of injecting node specific settings into the
+configuration.</p><p>As of now the module is still a bit of a half-baked affair, but I&rsquo;m going to add
+in a bunch of things:</p><ul><li>the ability to define a path for the network config files</li><li>IPv6 addresses and routes (not entirely sure if there is the possibility make
+both IPv4 and IPv6 optional but still require one of both using <code>nix</code>)</li><li>DNS using either <code>networking.extraHosts</code> or something like <code>dnsmasq</code></li><li>most importantly I need to consider Trust: since any node is able to simply
+inject configuration options it makes sense to:<ul><li>limit the options in some way that makes sense, e.g. using whitelisting for
+nodes that are allowed to make these kinds of changes</li><li>only trust nodes which can prove that they are trustworthy, e.g. using <code>gpg</code>
+or <code>minisign</code></li></ul></li></ul><p>Also <code>flakes</code> are the new shit apparently and from what I&rsquo;ve seen so far I
+really should take a closer look at those and make this module a flake.</p><p>For now the <code>tincDifferent</code> module in it&rsquo;s current state of incompleteness can
+be found on <a href=https://github.com/observer/tincDifferent>github</a>, feel free to give it a spin.</p><p>Anyways, that&rsquo;s all for now, I&rsquo;ll be back at some point in the (hopefully near)
+future, thanks for having me!</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://oblivious.observer/tags/nixos/>NixOS</a></li><li><a href=https://oblivious.observer/tags/tinc/>tinc</a></li></ul></footer><script src=https://utteranc.es/client.js repo=observer/observer.github.io issue-term=url label=💬 theme=photon-dark crossorigin=anonymous async></script></article></main><a href=#top aria-label="go to top" title="Go to Top (Alt + G)"><button class=top-link id=top-link type=button accesskey=g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg></button></a>
+<script>window.onload=function(){if(localStorage.getItem("menu-scroll-position")){document.getElementById('menu').scrollLeft=localStorage.getItem("menu-scroll-position");}}
+document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener("click",function(e){e.preventDefault();var id=this.getAttribute("href").substr(1);if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({behavior:"smooth"});}else{document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();}
+if(id==="top"){history.replaceState(null,null," ");}else{history.pushState(null,null,`#${id}`);}});});var mybutton=document.getElementById("top-link");window.onscroll=function(){if(document.body.scrollTop>800||document.documentElement.scrollTop>800){mybutton.style.visibility="visible";mybutton.style.opacity="1";}else{mybutton.style.visibility="hidden";mybutton.style.opacity="0";}};function menu_on_scroll(){localStorage.setItem("menu-scroll-position",document.getElementById('menu').scrollLeft);}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{if(document.body.className.includes("dark")){document.body.classList.remove('dark');localStorage.setItem("pref-theme",'light');}else{document.body.classList.add('dark');localStorage.setItem("pref-theme",'dark');}})</script></body></html>

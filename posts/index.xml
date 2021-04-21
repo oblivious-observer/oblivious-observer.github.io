@@ -5,10 +5,20 @@
     <link>https://oblivious.observer/posts/</link>
     <description>Recent content in Posts on oblivious observer</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Sat, 03 Apr 2021 00:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Mon, 12 Apr 2021 00:00:00 +0200</lastBuildDate>
     
 	<atom:link href="https://oblivious.observer/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Tinc different! - Part II: The Two Tunnels</title>
+      <link>https://oblivious.observer/posts/tincdifferent-ii-tinc-nixos-module/</link>
+      <pubDate>Mon, 12 Apr 2021 00:00:00 +0200</pubDate>
+      
+      <guid>https://oblivious.observer/posts/tincdifferent-ii-tinc-nixos-module/</guid>
+      <description>This is the second part of my little series about tinc and NixOS, where I first shortly introduced tinc and then explained how to set it up on Linux in general as well as on NixOS. This part is more or less a rewrite of a question I posted to the NixOS discourse a while ago.
+For a while I&amp;rsquo;ve been using tinc on a bunch of infrastructure and so far it&amp;rsquo;s basically been rock solid: once set up nodes anywhere simply join their network and become reachable for anyone who needs to access them.</description>
+    </item>
     
     <item>
       <title>Tinc different! - Part I: The Fellowship of the Ping</title>
