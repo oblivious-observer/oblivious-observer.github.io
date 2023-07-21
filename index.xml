@@ -10,7 +10,18 @@
       <link>https://oblivious.observer/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
     </image>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Mon, 13 Mar 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://oblivious.observer/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 21 Jul 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://oblivious.observer/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>NixOS Deployment with Colmena</title>
+      <link>https://oblivious.observer/posts/nixos-multi-host-deployment-with-flakes-and-colmena/</link>
+      <pubDate>Fri, 21 Jul 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://oblivious.observer/posts/nixos-multi-host-deployment-with-flakes-and-colmena/</guid>
+      <description>In the last post, I wrote about how to convert a &amp;rsquo;normal&amp;rsquo; NixOS system to one that is managed by a flake. This one will build on top of, or rather scale out of managing single hosts and dive into how to do remote management and deployment for multiple systems.
+Introduction Before taking a peek into Deployments, lets set a bit of a frame of reference here first:
+When talking about deployments a lot of people think about quite complex setups and the use of services such as autoscaling, instance creation etc.</description>
+    </item>
+    
     <item>
       <title>The Flake Awakens - Switching to a Flake-based Configuration</title>
       <link>https://oblivious.observer/posts/nixos-configuration-using-flakes/</link>

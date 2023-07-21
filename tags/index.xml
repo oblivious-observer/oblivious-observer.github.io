@@ -10,11 +10,29 @@
       <link>https://oblivious.observer/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
     </image>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Mon, 13 Mar 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://oblivious.observer/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 21 Jul 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://oblivious.observer/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>colmena</title>
+      <link>https://oblivious.observer/tags/colmena/</link>
+      <pubDate>Fri, 21 Jul 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://oblivious.observer/tags/colmena/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Deployment</title>
+      <link>https://oblivious.observer/tags/deployment/</link>
+      <pubDate>Fri, 21 Jul 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://oblivious.observer/tags/deployment/</guid>
+      <description></description>
+    </item>
+    
     <item>
       <title>flakes</title>
       <link>https://oblivious.observer/tags/flakes/</link>
-      <pubDate>Mon, 13 Mar 2023 00:00:00 +0000</pubDate>
+      <pubDate>Fri, 21 Jul 2023 00:00:00 +0000</pubDate>
       
       <guid>https://oblivious.observer/tags/flakes/</guid>
       <description></description>
@@ -23,7 +41,7 @@
     <item>
       <title>NixOS</title>
       <link>https://oblivious.observer/tags/nixos/</link>
-      <pubDate>Mon, 13 Mar 2023 00:00:00 +0000</pubDate>
+      <pubDate>Fri, 21 Jul 2023 00:00:00 +0000</pubDate>
       
       <guid>https://oblivious.observer/tags/nixos/</guid>
       <description></description>
