@@ -10,7 +10,34 @@
       <link>https://oblivious.observer/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
     </image>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Fri, 21 Jul 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://oblivious.observer/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 03 Nov 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://oblivious.observer/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>bash</title>
+      <link>https://oblivious.observer/tags/bash/</link>
+      <pubDate>Fri, 03 Nov 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://oblivious.observer/tags/bash/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>LUKS</title>
+      <link>https://oblivious.observer/tags/luks/</link>
+      <pubDate>Fri, 03 Nov 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://oblivious.observer/tags/luks/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>NixOS</title>
+      <link>https://oblivious.observer/tags/nixos/</link>
+      <pubDate>Fri, 03 Nov 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://oblivious.observer/tags/nixos/</guid>
+      <description></description>
+    </item>
+    
     <item>
       <title>colmena</title>
       <link>https://oblivious.observer/tags/colmena/</link>
@@ -35,15 +62,6 @@
       <pubDate>Fri, 21 Jul 2023 00:00:00 +0000</pubDate>
       
       <guid>https://oblivious.observer/tags/flakes/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>NixOS</title>
-      <link>https://oblivious.observer/tags/nixos/</link>
-      <pubDate>Fri, 21 Jul 2023 00:00:00 +0000</pubDate>
-      
-      <guid>https://oblivious.observer/tags/nixos/</guid>
       <description></description>
     </item>
     
@@ -111,29 +129,11 @@
     </item>
     
     <item>
-      <title>LUKS</title>
-      <link>https://oblivious.observer/tags/luks/</link>
-      <pubDate>Sat, 29 Aug 2020 00:00:00 +0200</pubDate>
-      
-      <guid>https://oblivious.observer/tags/luks/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>ZFS</title>
       <link>https://oblivious.observer/tags/zfs/</link>
       <pubDate>Sat, 29 Aug 2020 00:00:00 +0200</pubDate>
       
       <guid>https://oblivious.observer/tags/zfs/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>bash</title>
-      <link>https://oblivious.observer/tags/bash/</link>
-      <pubDate>Sat, 22 Aug 2020 00:00:00 +0200</pubDate>
-      
-      <guid>https://oblivious.observer/tags/bash/</guid>
       <description></description>
     </item>
     

@@ -2,6 +2,27 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://oblivious.observer/tags/bash/</loc>
+    <lastmod>2023-11-03T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://oblivious.observer/tags/luks/</loc>
+    <lastmod>2023-11-03T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://oblivious.observer/tags/nixos/</loc>
+    <lastmod>2023-11-03T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://oblivious.observer/</loc>
+    <lastmod>2023-11-03T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://oblivious.observer/posts/</loc>
+    <lastmod>2023-11-03T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://oblivious.observer/posts/recovering-a-lost-password/</loc>
+    <lastmod>2023-11-03T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://oblivious.observer/tags/</loc>
+    <lastmod>2023-11-03T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://oblivious.observer/tags/colmena/</loc>
     <lastmod>2023-07-21T00:00:00+00:00</lastmod>
   </url><url>
@@ -11,19 +32,7 @@
     <loc>https://oblivious.observer/tags/flakes/</loc>
     <lastmod>2023-07-21T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://oblivious.observer/tags/nixos/</loc>
-    <lastmod>2023-07-21T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>https://oblivious.observer/posts/nixos-multi-host-deployment-with-flakes-and-colmena/</loc>
-    <lastmod>2023-07-21T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://oblivious.observer/</loc>
-    <lastmod>2023-07-21T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://oblivious.observer/posts/</loc>
-    <lastmod>2023-07-21T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://oblivious.observer/tags/</loc>
     <lastmod>2023-07-21T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://oblivious.observer/posts/nixos-configuration-using-flakes/</loc>
@@ -62,9 +71,6 @@
     <loc>https://oblivious.observer/tags/libguestfs/</loc>
     <lastmod>2020-08-29T00:00:00+02:00</lastmod>
   </url><url>
-    <loc>https://oblivious.observer/tags/luks/</loc>
-    <lastmod>2020-08-29T00:00:00+02:00</lastmod>
-  </url><url>
     <loc>https://oblivious.observer/posts/nixos-20.03-luks-zfs-kvm/</loc>
     <lastmod>2020-08-29T00:00:00+02:00</lastmod>
   </url><url>
@@ -73,9 +79,6 @@
   </url><url>
     <loc>https://oblivious.observer/posts/nixos-zfs-install-script/</loc>
     <lastmod>2020-08-26T00:00:00+02:00</lastmod>
-  </url><url>
-    <loc>https://oblivious.observer/tags/bash/</loc>
-    <lastmod>2020-08-22T00:00:00+02:00</lastmod>
   </url><url>
     <loc>https://oblivious.observer/posts/introducing-oblivious/</loc>
     <lastmod>2020-08-22T00:00:00+02:00</lastmod>
